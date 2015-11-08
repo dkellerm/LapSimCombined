@@ -21,8 +21,7 @@ classdef CarDriveline < handle
             D.EffectiveCG = CG;
             D.SprungMass = SprungM;
             D.UnsprungMass = UnsprungM;
-            D.J = J;
-        end
+            D.J = J;        end
         
         function [MotorRPM,Efficiency] = DriveTransfer(D,RoadSpeed,TireRadius)
             Efficiency = D.Efficiency;

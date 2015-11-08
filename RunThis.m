@@ -4,9 +4,9 @@
 clear all
 clc
 
-% setup = 'Combustion';
-setup = 'Electric';
-
+setup = 'Combustion';
+% setup = 'Electric';
+% Car = CarBuilder();
 Car = CarBuilderSS(setup);
 Track = FSG2013;
 

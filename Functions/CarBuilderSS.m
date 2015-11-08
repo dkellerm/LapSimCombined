@@ -35,7 +35,7 @@ R = xlsread('SetupSheets.xlsx',setup,'AY6'); % in
 RollingResistance = xlsread('SetupSheets',setup,'AZ6');
 J = xlsread('SetupSheets.xlsx',setup,'BA6'); % slugs in^2
 W = xlsread('SetupSheets.xlsx',setup,'BB6'); % lb
-% TireModel = num2str(xlsread('SetupSheets.xlsx',setup,'BC6'));
+% TireModel = num2str(xlsread('SetupSheets.xlsx',setup,'BC6','basic'));
 TireModel = @Hoosier13;
 
 Tire = CarTire(TireModel,K,R,RollingResistance,W,CG,J);
@@ -55,22 +55,9 @@ Drag = xlsread('SetupSheets.xlsx',setup,'CC6');
 CrossArea = xlsread('SetupSheets.xlsx',setup,'CD6'); % in^2
 rho = xlsread('SetupSheets.xlsx',setup,'CE6');
 
-% Battery Parameters
+switch setup
 
-Capacity = xlsread('SetupSheets.xlsx',setup,'CG6'); % kWh
-Weight = xlsread('SetupSheets.xlsx',setup,'CH6'); % lb
-
-Battery = CarBattery(Capacity,Weight,CG);
-
-% Fuel Map
-fuel_step = xlsread('SetupSheets.xlsx',setup,'CI6');
-fuel_corner = xlsread('SetupSheets.xlsx',setup,'CJ6');
-fuel_brake = xlsread('SetupSheets.xlsx',setup,'CK6');
-fuel_shift = xlsread('SetupSheets.xlsx',setup,'CL6');
-fuel_map = xlsread('SetupSheets.xlsx',setup,'CM6');
-
-if setup == 'Electric'
-
+    case 'Electric'
 % Electric Motor Parameters
 
     RPMS = (0:1:3500)';
@@ -91,17 +78,56 @@ UnsprungMass = xlsread('SetupSheets.xlsx',setup,'BO6:BP6'); % Front Back (lb)
 J = xlsread('SetupSheets.xlsx',setup,'BQ6'); % slug in^2
 
 Driveline = CarDriveline(GearRatio,Efficiency,SprungMass,UnsprungMass,CG,J);
-    
-else
+
+% Battery Parameters
+
+Capacity = xlsread('SetupSheets.xlsx',setup,'CG6'); % kWh
+Weight = xlsread('SetupSheets.xlsx',setup,'CH6'); % lb
+
+Battery = CarBattery(Capacity,Weight,CG);
+
+    case 'Combustion'
     % Engine Parameters
  
     t_shift = xlsread('SetupSheets.xlsx',setup,'CO6'); % shift time (s). Only 3 decimals. Value from 4/19/14 test data. 
     redline = xlsread('SetupSheets.xlsx',setup,'CP6');    % rev limit (rpm) 11500   
+    engine = 'Delft';
+    RPMS_raw = xlsread('torquecurves.xlsx',engine,'C:C');
+    T_raw = xlsread('torquecurves.xlsx',engine,'E:E')*12; %in-lbf
+    RPMS = (min(RPMS_raw):max(RPMS_raw))';
+    T = interp1(RPMS_raw,T_raw,RPMS);
+    H_raw = xlsread('torquecurves.xlsx',engine,'F:F');
+    H = interp1(RPMS_raw,H_raw,RPMS);
+    
+   % Fuel Map
 
+Capacity = xlsread('SetupSheets.xlsx',setup,'CG6'); % Gal
+Weight = xlsread('SetupSheets.xlsx',setup,'CH6'); % lb
+fuel_step = xlsread('SetupSheets.xlsx',setup,'CI6');
+fuel_corner = xlsread('SetupSheets.xlsx',setup,'CJ6');
+fuel_brake = xlsread('SetupSheets.xlsx',setup,'CK6');
+fuel_shift = xlsread('SetupSheets.xlsx',setup,'CL6');
+% fuel_map = xlsread('SetupSheets.xlsx',setup,'CM6');
+fuel_map_raw = [ 0 .0001 .0003 .0004 .0005 .0006 .0007 .0009 .0010 .0011 .0012 ...              % GET CORRECTED VALUES (HAND CALCS OR WAVE), REDUCE FOR 10500 RPM
+    .0014 .0015 .0016 .0017 .0019 .0020 .0021 .0022 .0023 .0025 .0027 .0028 .0029 .0030 ]; % fuel consumption at full throttle every rpm step, starting at 0 rpm (gal/s)
+fuel_map = interp1(1:redline/length(fuel_map_raw):redline,fuel_map_raw,RPMS);
+
+Battery = CarBattery(Capacity,Weight,CG); 
+
+    %Engine Parameters again
+  P = 14.7; %[Psi] at WOT  
+  E = fuel_map*P./(H.*1714)  %[Gal/min]*[psi]/[HP]
+    
+    OutputCurve = [RPMS,T,E];
+    NMotors = 1;
+    Weight = 0; %lbf
+    
+    Motor = CarMotor(OutputCurve,NMotors,Weight,CG);
+    
     % Driveline Parameters
 
 T_mult = xlsread('SetupSheets.xlsx',setup,'BE6') ; % torque multiplier
-GearRatio = [ xlsread('SetupSheets.xlsx',setup,'BF6:BJ6') ];  
+GearRatio = [ xlsread('SetupSheets.xlsx',setup,'BF6:BJ6') ];
 G_P = xlsread('SetupSheets.xlsx',setup,'BK6');
 G_Final = xlsread('SetupSheets.xlsx',setup,'BL6');
 Efficiency = xlsread('SetupSheets.xlsx',setup,'BM6'); 
@@ -110,8 +136,7 @@ UnsprungMass = xlsread('SetupSheets.xlsx',setup,'BO6:BP6'); % Front Back (lb)
 J = xlsread('SetupSheets.xlsx',setup,'BQ6'); % slug in^2
 
 Driveline = CarDriveline(GearRatio,Efficiency,SprungMass,UnsprungMass,CG,J);
-
-    
+ 
 end
 
 

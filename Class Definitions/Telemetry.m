@@ -116,8 +116,10 @@ classdef Telemetry < handle
 
             for i = 1:S % For each one of the track sections
 
-                Acc = Track.Track(i).AccCurve; % Pull throttle curve
-                Dec = Track.Track(i).DecCurve; % Pull brake curve
+                Acc = (Track.Track(i).AccCurve); % Pull throttle curve
+                Dec = (Track.Track(i).DecCurve); % Pull brake curve
+                %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
+%dx affected by shifting 
 
                 dx = Acc(2,1) - Acc(1,1); % Determine the position 
                                           % increment that the simulator 
