@@ -89,11 +89,12 @@ Battery = CarBattery(Capacity,Weight,CG);
     case 'Combustion'
     % Engine Parameters
  
+    
     t_shift = xlsread('SetupSheets.xlsx',setup,'CO6'); % shift time (s). Only 3 decimals. Value from 4/19/14 test data. 
     redline = xlsread('SetupSheets.xlsx',setup,'CP6');    % rev limit (rpm) 11500   
     engine = 'Delft';
     RPMS_raw = xlsread('torquecurves.xlsx',engine,'C:C');
-    T_raw = xlsread('torquecurves.xlsx',engine,'E:E')*12; %in-lbf
+    T_raw = xlsread('torquecurves.xlsx',engine,'E:E'); %in-lbf
     RPMS = (min(RPMS_raw):max(RPMS_raw))';
     T = interp1(RPMS_raw,T_raw,RPMS);
     H_raw = xlsread('torquecurves.xlsx',engine,'F:F');
@@ -108,16 +109,19 @@ fuel_corner = xlsread('SetupSheets.xlsx',setup,'CJ6');
 fuel_brake = xlsread('SetupSheets.xlsx',setup,'CK6');
 fuel_shift = xlsread('SetupSheets.xlsx',setup,'CL6');
 % fuel_map = xlsread('SetupSheets.xlsx',setup,'CM6');
-fuel_map_raw = [ 0 .0001 .0003 .0004 .0005 .0006 .0007 .0009 .0010 .0011 .0012 ...              % GET CORRECTED VALUES (HAND CALCS OR WAVE), REDUCE FOR 10500 RPM
+
+fuel_map_raw = [ 0 .0001 .0003 .0004 .0005 .0006 .0007 .0009 .0010 .0011 .0012 ...              % GET CORRECTED VALUES (HAND CALCS OR WAVE),
     .0014 .0015 .0016 .0017 .0019 .0020 .0021 .0022 .0023 .0025 .0027 .0028 .0029 .0030 ]; % fuel consumption at full throttle every rpm step, starting at 0 rpm (gal/s)
-fuel_map = interp1(1:redline/length(fuel_map_raw):redline,fuel_map_raw,RPMS);
+
+frpm = 1:max(RPMS)/length(fuel_map_raw):max(RPMS); %RPM's array with fuel step increment
+fuel_map = interp1(frpm,fuel_map_raw,RPMS);
 
 Battery = CarBattery(Capacity,Weight,CG); 
 
     %Engine Parameters again
   P = 14.7; %[Psi] at WOT  
-  E = fuel_map*P./(H.*1714)  %[Gal/min]*[psi]/[HP]
-    
+  E = (fuel_map.*P./(H.*1714));  %[Gal/min]*[psi]/[HP]
+
     OutputCurve = [RPMS,T,E];
     NMotors = 1;
     Weight = 0; %lbf
@@ -126,16 +130,17 @@ Battery = CarBattery(Capacity,Weight,CG);
     
     % Driveline Parameters
 
-T_mult = xlsread('SetupSheets.xlsx',setup,'BE6') ; % torque multiplier
-GearRatio = [ xlsread('SetupSheets.xlsx',setup,'BF6:BJ6') ];
-G_P = xlsread('SetupSheets.xlsx',setup,'BK6');
-G_Final = xlsread('SetupSheets.xlsx',setup,'BL6');
+Tmult = xlsread('SetupSheets.xlsx',setup,'BE6') ; % torque multiplier
+% GearRatio = [ xlsread('SetupSheets.xlsx',setup,'BF6:BJ6') ];
+GearRatio = [ xlsread('SetupSheets.xlsx',setup,'BF6') ];
+PrimaryGear = xlsread('SetupSheets.xlsx',setup,'BK6');
+FinalDrive = xlsread('SetupSheets.xlsx',setup,'BL6');
 Efficiency = xlsread('SetupSheets.xlsx',setup,'BM6'); 
 SprungMass = xlsread('SetupSheets.xlsx',setup,'BN6'); % lb
 UnsprungMass = xlsread('SetupSheets.xlsx',setup,'BO6:BP6'); % Front Back (lb)
 J = xlsread('SetupSheets.xlsx',setup,'BQ6'); % slug in^2
 
-Driveline = CarDriveline(GearRatio,Efficiency,SprungMass,UnsprungMass,CG,J);
+Driveline = CarDriveline(GearRatio,Efficiency,SprungMass,UnsprungMass,CG,J,PrimaryGear,FinalDrive,Tmult);
  
 end
 

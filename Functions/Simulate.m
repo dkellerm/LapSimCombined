@@ -99,6 +99,8 @@ for i = 1:S
     end    
 end
 
+
+
 [ EntranceV, ExitV, BP, BPSpeed ] = BrakePointIterator( TrackObject,MaxV,EntranceV,ExitV );
 Miscellaneous = {EntranceV,ExitV,BP,BPSpeed};
 Tele = Telemetry(Miscellaneous);

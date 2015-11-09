@@ -67,8 +67,7 @@ classdef Car < handle
             
   %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
   % Need to incorporate sifting in AxleRPM for CarObject.Driveline.GearRatio          
-            
-            AxleRPM  = MotorRPM/CarObject.Driveline.GearRatio(1,1);
+            AxleRPM  = MotorRPM/CarObject.Driveline.GearRatio;
             % Calculate Car Velocity for each Axle RPM value
             Velocity = CarObject.Tire.Radius*AxleRPM*pi/30; % in/s
             % Calculate corresponding drag for each veloicty
@@ -76,7 +75,7 @@ classdef Car < handle
      %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      %AxleT gear ratio
             % Caluclate axle torque for each motor torque value
-            AxleT    = MotorT*CarObject.Driveline.GearRatio(1,1)*CarObject.Driveline.Efficiency; % in lbf
+            AxleT    = MotorT*CarObject.Driveline.GearRatio*CarObject.Driveline.Efficiency; % in lbf
             % Calculate force at the wheels for each axle torque value
             WheelF   = AxleT/CarObject.Tire.Radius; % lbf
             % Calculate theoretical acceleration for each wheel force value in in/s^2
@@ -95,7 +94,7 @@ classdef Car < handle
             
    %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%         
            %Shifting affects GearRatio in MotorT
-            MotorT = (CarObject.Keq*CarObject.Weight*ForwardGs + Drag + RollingR)*CarObject.Tire.Radius/((CarObject.Driveline.GearRatio(1,1))*CarObject.Driveline.Efficiency);
+            MotorT = (CarObject.Keq*CarObject.Weight*ForwardGs + Drag + RollingR)*CarObject.Tire.Radius/((CarObject.Driveline.GearRatio)*CarObject.Driveline.Efficiency);
             
             % Calculate power consumption for each motor rpm
             Power    = ((MotorT.*MotorRPM./MotorE)*pi/30);
@@ -133,7 +132,9 @@ classdef Car < handle
             
             % Calculate axle and motor rpms based on velocity
             AxleRPM = Velocity/(CarObject.Tire.Radius*pi/30);
-            MotorRPM = AxleRPM*CarObject.Driveline.GearRatio(1,1);
+      %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      %Shifting
+            MotorRPM = AxleRPM*CarObject.Driveline.GearRatio;
             % Recalculate applied brake torque based on wheel force
             BrakeTorque = WheelF*CarObject.Tire.Radius;
             
@@ -176,7 +177,7 @@ classdef Car < handle
   %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
   %MotorT is affected by shifting thourgh CarObject.Driveline.GearRatio
             
-            MotorT = AxleT/((CarObject.Driveline.GearRatio(1,1))*CarObject.Driveline.Efficiency);
+            MotorT = AxleT/((CarObject.Driveline.GearRatio)*CarObject.Driveline.Efficiency);
             % Pull available motor torque
             MotorTrueT = CarObject.Motor.OutputCurve(:,2);
             % Eliminate motor torques that occur at velocities above
@@ -193,7 +194,7 @@ classdef Car < handle
             
   %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
   % AxleT affected by shifting through CarObject.Driveline.GearRatio
-            AxleT = MotorT*(CarObject.Driveline.GearRatio(1,1))*CarObject.Driveline.Efficiency; % in lbf
+            AxleT = MotorT*(CarObject.Driveline.GearRatio)*CarObject.Driveline.Efficiency; % in lbf
             WheelF = AxleT/CarObject.Tire.Radius; % lbf
             ForwardGs = (WheelF - Drag - RollingR)/(CarObject.Keq*CarObject.Weight);
             % calculate axle and motor rpms from given velocity array
@@ -201,7 +202,7 @@ classdef Car < handle
             
   %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
   % MotorRPM affected by shifting through CarObject.Driveline.GearRatio
-            MotorRPM = AxleRPM*(CarObject.Driveline.GearRatio(1,1));
+            MotorRPM = AxleRPM*(CarObject.Driveline.GearRatio);
             % calculate power consumption based on motor torque, rpm and
             % efficiency
             Power = ((MotorT.*MotorRPM./MotorE)*pi/30);
@@ -253,7 +254,7 @@ classdef Car < handle
             
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
       % MotorRPM affected by CarObject.Driveline.GearRatio      
-      MotorRPM = AxleRPM*(CarObject.Driveline.GearRatio(1,1));
+      MotorRPM = AxleRPM*(CarObject.Driveline.GearRatio);
             
             % Tractive limit is reached at all indexes where braking torque
             % is less than the available braking torque
