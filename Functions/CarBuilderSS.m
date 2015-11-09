@@ -2,7 +2,7 @@ function [ C ] = CarBuilderSS(tabName, rowNumber)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
-range = excelRange(excelCell(rowNumber, 'B'), excelCell(rowNumber, 'CQ'))
+range = excelRange(excelCell(rowNumber, 'B'), excelCell(rowNumber, 'CQ'));
 setupSheetData = zeros(1,95);
 setupSheetData(2:95) = xlsread('SetupSheets.xlsx', tabName, range);
 
