@@ -115,6 +115,9 @@ classdef CarTire < handle
             Kf = ((1/(K1F*Tf^2/2 + KarbF) + 2/(K2*Tf^2))^-1);
             Kr = ((1/(K1R*Tr^2/2 + KarbR) + 2/(K2*Tr^2))^-1);
             
+            Kf_initial = Kf;
+            Kr_initial = Kr;
+            
             Gs = (0:0.01:2)';
             
             UnbalanceFlag = 1;
@@ -207,8 +210,8 @@ classdef CarTire < handle
                
             
             lateralG = OutGs(I);
-            CarObject.Suspension.LinearSpring(1) = Kf;
-            CarObject.Suspension.LinearSpring(2) = Kr;
+            CarObject.Suspension.LinearSpring(1) = CarObject.Suspension.LinearSpring(1) - (Kf_initial - Kf);
+            CarObject.Suspension.LinearSpring(2) = CarObject.Suspension.LinearSpring(2) - (Kr_initial - Kr);
             
         end
         
