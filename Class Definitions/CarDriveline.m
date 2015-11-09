@@ -10,10 +10,10 @@ classdef CarDriveline < handle
         SprungMass
         UnsprungMass
         J
-        PrimaryGear
-        FinalDrive
-        setup
-        Tmult
+%         PrimaryGear
+%         FinalDrive
+%         setup
+%         Tmult
         Name = '';
     end
     methods
@@ -28,7 +28,7 @@ classdef CarDriveline < handle
 %             D.PrimaryGear = PrimaryGear;
 %             D.FinalDrive = FinalDrive;
 %             D.Tmult = Tmult;
-%         
+% %         
 %         end
         
         function D = CarDriveline(GearRatio,Efficiency,SprungM,UnsprungM,CG,J)

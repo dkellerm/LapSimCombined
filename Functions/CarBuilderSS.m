@@ -113,14 +113,14 @@ fuel_shift = xlsread('SetupSheets.xlsx',setup,'CL6');
 fuel_map_raw = [ 0 .0001 .0003 .0004 .0005 .0006 .0007 .0009 .0010 .0011 .0012 ...              % GET CORRECTED VALUES (HAND CALCS OR WAVE),
     .0014 .0015 .0016 .0017 .0019 .0020 .0021 .0022 .0023 .0025 .0027 .0028 .0029 .0030 ]; % fuel consumption at full throttle every rpm step, starting at 0 rpm (gal/s)
 
-frpm = 1:max(RPMS)/length(fuel_map_raw):max(RPMS); %RPM's array with fuel step increment
+frpm = (1:max(RPMS)/length(fuel_map_raw):max(RPMS))'; %RPM's array with fuel step increment
 fuel_map = interp1(frpm,fuel_map_raw,RPMS);
 
 Battery = CarBattery(Capacity,Weight,CG); 
 
     %Engine Parameters again
   P = 14.7; %[Psi] at WOT  
-  E = (fuel_map.*P./(H.*1714));  %[Gal/min]*[psi]/[HP]
+  E = (fuel_map*P./(H*1714));  %[Gal/min]*[psi]/[HP]
 
     OutputCurve = [RPMS,T,E];
     NMotors = 1;
