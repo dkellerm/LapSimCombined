@@ -7,7 +7,7 @@
 clear all
 clc
 
-winopen('SetupSheets.xlsx'); %Make sure to save excel before running, you can leave it open
+%winopen('SetupSheets.xlsx'); %Make sure to save excel before running, you can leave it open
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%%%%%%%%%
 %%%%%%%%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%%%%%%%%%
