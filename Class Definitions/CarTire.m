@@ -10,6 +10,7 @@ classdef CarTire < handle
         MaxForwardAcceleration  % Max non turning acceleration on GG curve
         MaxBrakingAcceleration 
         MaxLateralAcceleration % Max turning acceleration on GG curve
+        LateralAccelerationMap % Max Lateral acceleration for at different radii
         RollingResistance % Constant rolling resistance coefficient
         SpringRate
         Weight % Weight of all four tires (lbf)
@@ -76,8 +77,21 @@ classdef CarTire < handle
             T.TireModel = TM;
         end
         
-        function LateralGCalculator(T,CarObject,Balance)
+        function LateralGMapGenerator(T,CarObject,TrackObject)
+            TrackCornerRadii = TrackObject.TrackCornerRadii();
             
+            % Balance Car at closest to average corner
+            averageCornerRadius = avg(TrackCornerRadii);
+            [~, closestToAverageCornerRadiusIndex] = min(abs(TrackCornerRadii-averageCornerRadius));
+            LateralGCalculator(T, CarObject, 'Balance', TrackCornerRadii(closestToAverageCornerRadiusIndex));
+            
+            % Calculate max lateral acceleration at corner radii using balanced car.
+            T.LateralAccelerationMap = struct('accelerations', arrayfun(@(radius)(LateralGCalculator(T,CarObject,'',radius)), TrackCornerRadii),...
+                                              'radii', TrackCornerRadii);
+            T.MaxLateralAcceleraton = max(T.LateralAccelerationMap.accelerations);
+        end
+        
+        function lateralG = LateralGCalculator(T,CarObject,Balance,Radius)
             Ws = CarObject.SprungMass;
             Wfus = CarObject.UnsprungMass(1);
             Wrus = CarObject.UnsprungMass(2);
@@ -109,6 +123,16 @@ classdef CarTire < handle
             
                 Fz = LateralWeightTransfer( Gs,Ws,Wfus,Wrus,FR,Tf,Tr,Kf,Kr,hCG,hfus,hrus,hfrc,hrrc );
 
+                Velocity = sqrt(Gs * 32.2 * Radius);
+                Downforce = CarObject.LiftCoefficient * CarObject.FrontCrossSection * Velocity^2;
+                AeroFyFront = Downforce / 2;  % TODO: Change to use Center of Pressure
+                AeroFyRear = Downforce / 2;
+                
+                Fz(1) = Fz(1) + AeroFyFront;
+                Fz(2) = Fz(2) + AeroFyFront;
+                Fz(3) = Fz(3) + AeroFyRear;
+                Fz(4) = Fz(4) + AeroFyRear;
+                
                 [Fy,SA] = T.TireModel(Fz,'Lateral');
 
                 FyFront = Fy(:,1) + Fy(:,2);
@@ -182,7 +206,9 @@ classdef CarTire < handle
             end
                
             
-            T.MaxLateralAcceleration = OutGs(I);
+            lateralG = OutGs(I);
+            CarObject.Suspension.LinearSpring(1) = Kf;
+            CarObject.Suspension.LinearSpring(2) = Kr;
             
         end
         

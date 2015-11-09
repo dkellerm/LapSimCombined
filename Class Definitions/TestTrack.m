@@ -14,6 +14,7 @@ classdef TestTrack < handle
         Length % Total length of the track
         Sections % Number of track sections
         CurrentSection % Current section that the car is on
+        CornerRadii % Array of corner radii the car will negotiate
     end % properties
     
     methods
@@ -61,6 +62,19 @@ classdef TestTrack < handle
                 disp('Warning: Track geometry possibly inconsistent.')
             end
             
+            % Initialize Corner Radius Array
+            sectionIsCorner = arrayfun(@(section)(section.Radius ~= 0), TT.Sections);
+            numCorners = sum(sectionIsCorner);
+            TT.CornerRadii = zeros(numCorners);
+            
+            cornerIndex = 1;
+            for sectionIndex = 1:TT.Sections
+                if TT.Sections(sectionIndex).Radius ~= 0
+                    TT.CornerRadii(cornerIndex) = TT.Sections(sectionIndex).Radius;
+                    cornerIndex = cornerIndex + 1;
+                end
+            end
+            
         end % constructor function
         
         function Info = SectionInfo(TT,SectionNumber)
@@ -92,6 +106,10 @@ classdef TestTrack < handle
             
             Info = SectionInfo(TT.Track(SectionNumber));
             
+        end
+        
+        function CornerRadii = TrackCornerRadii(TT)
+            CornerRadii = TT.CornerRadii;
         end
     end % methods
     

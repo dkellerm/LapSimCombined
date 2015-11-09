@@ -29,7 +29,8 @@ function [ Tele ] = Simulate( CarObject,TrackObject )
 
 dx = 1;
 
-CarObject.Tire.LateralGCalculator(CarObject,'Balance');
+CarObject.Tire.LateralGMapGenerator(CarObject, TrackObject);
+
 CarObject.Tire.LongitudinalGCalculator(CarObject);
 
 LookUpTable1 = CarObject.StraightAccTableGenerator();

@@ -11,6 +11,8 @@ classdef Car < handle
         Suspension
         Tire
         DragCoefficient
+        LiftCoefficient
+        LiftCenterOfPressure
         FrontCrossSection
         Weight
         CG
