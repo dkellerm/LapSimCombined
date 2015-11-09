@@ -4,7 +4,7 @@ function [ C ] = CarBuilderSS(tabName, rowNumber)
 
 range = excelRange(excelCell(rowNumber, 'B'), excelCell(rowNumber, 'CQ'));
 setupSheetData = zeros(1,95);
-setupSheetData(2:95) = xlsread('SetupSheets.xlsx', tabName, range);
+setupSheetData(2:95) = xlsread('SetupSheets.xlsx', tabName, range, 'basic');
 
 CG = setupSheetData(18:20); % x y z (in) 'R6:T6'
 
