@@ -19,7 +19,7 @@ setup = input(' Combustion or Electric? ','s');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Car = CarBuilder();
-Car = CarBuilderSS(setup);
+Car = CarBuilderSS(setup, 6);
 Track = FSG2013;
 
 % [ RawResults,PointResults ] = RPMLimitingAnalysis( Car,Track );
