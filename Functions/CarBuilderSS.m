@@ -4,7 +4,7 @@ function [ C ] = CarBuilderSS(tabName, rowNumber)
 
 range = excelRange(excelCell(rowNumber, 'B'), excelCell(rowNumber, 'CQ'));
 setupSheetData = zeros(1,95);
-setupSheetData(2:95) = xlsread('SetupSheets.xlsx', tabName, range);
+setupSheetData(2:95) = xlsread('SetupSheets.xlsx', tabName, range, 'basic');
 
 CG = setupSheetData(18:20); % x y z (in) 'R6:T6'
 
@@ -59,6 +59,16 @@ Drag = setupSheetData(81);
 CrossArea = setupSheetData(82); % in^2
 rho = setupSheetData(83);
 
+% Similar Driveline
+
+        Tmult = setupSheetData(57); % torque multiplier
+        PrimaryGear = setupSheetData(63);
+        FinalDrive = setupSheetData(64);
+        Efficiency = setupSheetData(65);
+        SprungMass = setupSheetData(66); % lb
+        UnsprungMass = setupSheetData(67:68); % Front Back (lb)
+        J = setupSheetData(69); % slug in^2
+        
 switch tabName
     
     case 'Electric'
@@ -76,13 +86,7 @@ switch tabName
         % Driveline Parameters
         
         GearRatio = setupSheetData(58);
-        Efficiency = setupSheetData(65);
-        SprungMass = setupSheetData(66); % lb
-        UnsprungMass = setupSheetData(67:68); % Front Back (lb)
-        J = setupSheetData(69); % slug in^2
-        
-        Driveline = CarDriveline(GearRatio,Efficiency,SprungMass,UnsprungMass,CG,J);
-        
+
         % Battery Parameters
         
         Capacity = setupSheetData(85); % kWh
@@ -134,21 +138,21 @@ switch tabName
         
         % Driveline Parameters
         
-        Tmult = setupSheetData(57); % torque multiplier
         % GearRatio = [ xlsread('SetupSheets.xlsx',setup,'BF6:BJ6') ];
         GearRatio = setupSheetData(58);
-        PrimaryGear = setupSheetData(63);
-        FinalDrive = setupSheetData(64);
-        Efficiency = setupSheetData(65);
-        SprungMass = setupSheetData(66); % lb
-        UnsprungMass = setupSheetData(67:68); % Front Back (lb)
-        J = setupSheetData(69); % slug in^2
-        
-        Driveline = CarDriveline(GearRatio,Efficiency,SprungMass,UnsprungMass,CG,J,PrimaryGear,FinalDrive,Tmult);
+     
 end
 
+        Driveline = CarDriveline(GearRatio,Efficiency,SprungMass,UnsprungMass,CG,J,PrimaryGear,FinalDrive,Tmult,tabName);
+       
+        if setupSheetData(4) == 1
+            Driveline.tabName = 'Combustion';
+        else
+            Driveline.tabName = 'Electric';
+        end
 
 % Car Parameters
+
 
 C = Car(Brakes,Driveline,Motor,Chassis,Battery,Suspension,Tire,Drag,CrossArea);
 
