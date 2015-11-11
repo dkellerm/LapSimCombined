@@ -39,7 +39,7 @@ classdef CarDriveline < handle
                         
                         case 'Combustion'
                              Efficiency = D.Efficiency;
-                    MotorRPM = RoadSpeed/TireRadius*D.GearRatio*D.PrimaryGear*D.FinalDrive*D.Tmult;
+                    MotorRPM = RoadSpeed/TireRadius*D.GearRatio;
                     end
                 end
 

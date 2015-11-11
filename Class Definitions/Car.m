@@ -97,7 +97,7 @@ classdef Car < handle
             MotorT = (CarObject.Keq*CarObject.Weight*ForwardGs + Drag + RollingR)*CarObject.Tire.Radius/((CarObject.Driveline.GearRatio)*CarObject.Driveline.Efficiency);
             
             % Calculate power consumption for each motor rpm
-            Power    = ((MotorT.*MotorRPM./MotorE)*pi/30);
+            Power    = ((MotorT.*MotorRPM./((MotorE)*pi/30)));
             
             LateralGs = zeros(length(Velocity),1);
             
