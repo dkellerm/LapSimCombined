@@ -12,8 +12,8 @@ classdef Car < handle
         Tire
         DragCoefficient
         LiftCoefficient
-        LiftCenterOfPressure
-        FrontCrossSection
+        LiftCenterOfPressure %in
+        FrontCrossSection %in^2
         Weight
         CG
         SprungMass
@@ -90,9 +90,8 @@ classdef Car < handle
 
             % Compare acceleration to possible acceleration from tires and reduce
             % accelerations to those values
-            ForwardGs = MotorGs;
-            I = ForwardGs > CarObject.Tire.MaxForwardAcceleration;
-            ForwardGs(I) = CarObject.Tire.MaxForwardAcceleration;
+            maxForwardGsTire = interp1(CarObject.Tire.ForwardAccelerationMap.velocities, CarObject.Tire.ForwardAccelerationMap.accelerations, Velocity, 'spline');
+            ForwardGs = max(MotorGs, maxForwardGsTire);
             
    %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%         
            %Shifting affects GearRatio in MotorT
@@ -105,7 +104,7 @@ classdef Car < handle
             
             % Tractive limit is reached at all of the indexes that were
             % previously adjusted to match tire acceleration
-            TractiveLimit = I;
+            [~, TractiveLimit] = ismember(ForwardGs, maxForwardGsTire);
                         %    1       2     3        4       5      6      7
             LookUpTable = [Velocity,Drag,AxleRPM,MotorRPM,MotorT,MotorE,Power,ForwardGs,LateralGs,TractiveLimit];
             
@@ -113,23 +112,13 @@ classdef Car < handle
         end
             
         function [ LookUpTable ] = StraightDecTableGenerator(CarObject,Velocity,Drag)
-
             RollingR = CarObject.Weight*CarObject.Tire.RollingResistance; % Rolling Resistance force for car configuration
 
-            % Generate wheel force values from brake torque and tire radius 
-            WheelF   = ones(length(Velocity),1)*sum(CarObject.Brakes.Torque)/CarObject.Tire.Radius; % lbf
-            % Calculate braking acceleration from wheel force, drag and rolling
-            % resistance for each velocity value
-            BrakeA   = (WheelF + Drag + RollingR)/(CarObject.Keq*CarObject.Weight/(12*32.174)); % in/s^2
-            BrakeGs  = BrakeA/(12*32.174);
-
-            % Reduce any brake acceleration values that are more than tire capability
-            % to tire capability
-            ForwardGs = BrakeGs;
-            I = ForwardGs > abs(CarObject.Tire.MaxBrakingAcceleration);
-            ForwardGs(I) = abs(CarObject.Tire.MaxBrakingAcceleration);
+            % Assume brakes use tire at full potential
+            ForwardGs = interp1(CarObject.Tire.BrakingAccelerationMap.velocities, CarObject.Tire.BrakeAccelerationMap.accelerations, Velocity, 'spline');
             
-            % Recalculate wheel force based on tire capability
+            % Calculate wheel force based on tire capability. Includes drag
+            % strangely.
             WheelF = CarObject.Keq*CarObject.Weight*ForwardGs - Drag - RollingR; 
             
             % Calculate axle and motor rpms based on velocity
@@ -156,8 +145,8 @@ classdef Car < handle
         
             RollingR = CarObject.Weight*CarObject.Tire.RollingResistance; % Rolling Resistance force for car configuration
             
-            % Pulls max lateral Gs available from tire
-            MaxLatG = CarObject.Tire.MaxLateralAcceleration;
+            % Pulls max lateral Gs available from map.
+            MaxLatG = interp1(CarObject.Tire.LateralAccelerationMap.velocities, CarObject.Tire.LateralAccelerationMap.accelerations, Velocity, 'linear');
             
             % Finds lateral Gs for each velocity in the given array
             LateralGs = (Velocity.^2/R)/(32.174*12);
@@ -170,7 +159,7 @@ classdef Car < handle
             Drag(I) = [];
             MotorE(I) = [];
             % Find max forward Gs available from tires for each lateral G
-            ForwardGs = CarObject.Tire.GGCurve(LateralGs,'Throttle');
+            ForwardGs = CarObject.Tire.GGCurve(LateralGs,'Throttle', Velocity);
 
             % Calculate wheel forces, axle torque, and motor torque based
             % on given forward Gs
@@ -222,7 +211,7 @@ classdef Car < handle
             RollingR = CarObject.Weight*CarObject.Tire.RollingResistance; % Rolling Resistance force for car configuration
             
             % Pull max lateral Gs from tire model
-            MaxLatA = CarObject.Tire.MaxLateralAcceleration;
+            MaxLatA = interp1(CarObject.Tire.LateralAccelerationMap.velocities, CarObject.Tire.LateralAccelerationMap.accelerations, Velocity, 'linear');
             
             % Calculate lateral Gs for each velocity in given array
             LateralGs = (Velocity.^2/R)/(32.174*12);
@@ -269,8 +258,8 @@ classdef Car < handle
         function [deltaFz] = CalculateAeroEffects(CarObject, Velocity)
             %   Weight Transfer Equations from: Solve[{drag*(CoPz - CGz) + lift*-1*(CoPx - CGx) - Fy*frontAxleDistance + Ry*rearAxleDistance == 0, Fy + Ry - lift == 0}, {Fy, Ry}]
             
-            lift = CarObject.LiftCoefficient * Velocity^2 * CarObject.FrontCrossSection;
-            drag = CarObject.DragCoefficient * Velocity^2 * CarObject.FrontCrossSection;
+            lift = (0.5*RHO*CarObject.LiftCoefficient*CarObject.FrontCrossSection*Velocity^2)/12^4; % lbf
+            drag = (0.5*RHO*CarObject.DragCoefficient*CarObject.FrontCrossSection*Velocity^2)/12^4; % lbf
             
             frontAxleDistance = CarObject.CG(1);
             rearAxleDistance = CarObject.Chassis.Length - CarObject.CG(1);

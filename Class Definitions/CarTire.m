@@ -306,7 +306,7 @@ classdef CarTire < handle
             
         end
  
-        function LongA = GGCurve(T,LateralA,BrakeThrottle)
+        function LongA = GGCurve(T,LateralA,BrakeThrottle, Velocity)
             % CarTire GGCurve Method
             %
             % This method returns an array of possible longitudinal
@@ -342,9 +342,11 @@ classdef CarTire < handle
             % NONE    
             
             if strcmp(BrakeThrottle,'Throttle')
-                LongA = T.MaxForwardAcceleration*sqrt(1-(LateralA/T.MaxLateralAcceleration).^2);
+                maxForwardA = interp1(CarObject.Tire.ForwardAccelerationMap.velocities, CarObject.Tire.ForwardAccelerationMap.accelerations, Velocity, 'spline');
+                LongA = maxForwardA.*sqrt(1-(LateralA/T.MaxLateralAcceleration).^2);
             elseif strcmp(BrakeThrottle,'Brake')
-                LongA = abs(T.MaxBrakingAcceleration*sqrt(1-(LateralA/T.MaxLateralAcceleration).^2));
+                maxBrakeA = interp1(CarObject.Tire.BrakingAccelerationMap.velocities, CarObject.Tire.BrakingAccelerationMap.accelerations, Velocity, 'spline');
+                LongA = abs(maxBrakeA.*sqrt(1-(LateralA/T.MaxLateralAcceleration).^2));
             end
         end
         
