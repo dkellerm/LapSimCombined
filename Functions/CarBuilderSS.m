@@ -59,6 +59,16 @@ Drag = setupSheetData(81);
 CrossArea = setupSheetData(82); % in^2
 rho = setupSheetData(83);
 
+% Similar Driveline
+
+        Tmult = setupSheetData(57); % torque multiplier
+        PrimaryGear = setupSheetData(63);
+        FinalDrive = setupSheetData(64);
+        Efficiency = setupSheetData(65);
+        SprungMass = setupSheetData(66); % lb
+        UnsprungMass = setupSheetData(67:68); % Front Back (lb)
+        J = setupSheetData(69); % slug in^2
+        
 switch tabName
     
     case 'Electric'
@@ -76,13 +86,7 @@ switch tabName
         % Driveline Parameters
         
         GearRatio = setupSheetData(58);
-        Efficiency = setupSheetData(65);
-        SprungMass = setupSheetData(66); % lb
-        UnsprungMass = setupSheetData(67:68); % Front Back (lb)
-        J = setupSheetData(69); % slug in^2
-        
-        Driveline = CarDriveline(GearRatio,Efficiency,SprungMass,UnsprungMass,CG,J);
-        
+
         % Battery Parameters
         
         Capacity = setupSheetData(85); % kWh
@@ -100,7 +104,7 @@ switch tabName
         RPMS_raw = xlsread('torquecurves.xlsx',engine,'C:C');
         T_raw = xlsread('torquecurves.xlsx',engine,'E:E'); %in-lbf
         RPMS = (min(RPMS_raw):max(RPMS_raw))';
-        T = interp1(RPMS_raw,T_raw,RPMS);
+        T = interp1(RPMS_raw,T_raw,RPMS)*12;
         H_raw = xlsread('torquecurves.xlsx',engine,'F:F');
         H = interp1(RPMS_raw,H_raw,RPMS);
         
@@ -115,16 +119,16 @@ switch tabName
         % fuel_map = xlsread('SetupSheets.xlsx',setup,'CM6');
         
         fuel_map_raw = [ 0 .0001 .0003 .0004 .0005 .0006 .0007 .0009 .0010 .0011 .0012 ...              % GET CORRECTED VALUES (HAND CALCS OR WAVE),
-            .0014 .0015 .0016 .0017 .0019 .0020 .0021 .0022 .0023 .0025 .0027 .0028 .0029 .0030 ]; % fuel consumption at full throttle every rpm step, starting at 0 rpm (gal/s)
+            .0014 .0015 .0016 .0017 .0019 .0020 .0021 .0022 .0023 .0025 .0027 .0028 .0029 .0030 ]'; % fuel consumption at full throttle every rpm step, starting at 0 rpm (gal/s)
         
-        frpm = 1:max(RPMS)/length(fuel_map_raw):max(RPMS); %RPM's array with fuel step increment
-        fuel_map = interp1(frpm,fuel_map_raw,RPMS);
+        frpm = (0:max(RPMS)/length(fuel_map_raw):length(RPMS)-2)'; %RPM's array with fuel step increment
+        fuel_map = spline(frpm,fuel_map_raw,RPMS);
         
         Battery = CarBattery(Capacity,Weight,CG);
         
         %Engine Parameters again
         P = 14.7; %[Psi] at WOT
-        E = (fuel_map.*P./(H.*1714));  %[Gal/min]*[psi]/[HP]
+        E = abs((fuel_map.*P)./(H*1714));  %[Gal/min]*[psi]/[HP]
         
         OutputCurve = [RPMS,T,E];
         NMotors = 1;
@@ -134,21 +138,21 @@ switch tabName
         
         % Driveline Parameters
         
-        Tmult = setupSheetData(57); % torque multiplier
         % GearRatio = [ xlsread('SetupSheets.xlsx',setup,'BF6:BJ6') ];
-        GearRatio = setupSheetData(58);
-        PrimaryGear = setupSheetData(63);
-        FinalDrive = setupSheetData(64);
-        Efficiency = setupSheetData(65);
-        SprungMass = setupSheetData(66); % lb
-        UnsprungMass = setupSheetData(67:68); % Front Back (lb)
-        J = setupSheetData(69); % slug in^2
-        
-        Driveline = CarDriveline(GearRatio,Efficiency,SprungMass,UnsprungMass,CG,J,PrimaryGear,FinalDrive,Tmult);
+        GearRatio = setupSheetData(58)*Tmult*PrimaryGear*FinalDrive;
+       
 end
 
+        Driveline = CarDriveline(GearRatio,Efficiency,SprungMass,UnsprungMass,CG,J,PrimaryGear,FinalDrive,Tmult,tabName);
+       
+        if setupSheetData(4) == 1
+            Driveline.tabName = 'Combustion';
+        else
+            Driveline.tabName = 'Electric';
+        end
 
 % Car Parameters
+
 
 C = Car(Brakes,Driveline,Motor,Chassis,Battery,Suspension,Tire,Drag,CrossArea);
 
