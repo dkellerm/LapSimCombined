@@ -8,7 +8,9 @@ classdef CarTire < handle
     
     properties
         MaxForwardAcceleration  % Max non turning acceleration on GG curve
-        MaxBrakingAcceleration 
+        MaxBrakingAcceleration
+        ForwardAccelerationMap
+        BrakingAccelerationMap
         MaxLateralAcceleration % Max turning acceleration on GG curve
         LateralAccelerationMap % Max Lateral acceleration for at different radii
         RollingResistance % Constant rolling resistance coefficient
@@ -77,7 +79,7 @@ classdef CarTire < handle
             T.TireModel = TM;
         end
         
-        function LateralGMapGenerator(T,CarObject,TrackObject)
+        function CalculateLateralGMap(T,CarObject,TrackObject)
             TrackCornerRadii = TrackObject.TrackCornerRadii();
             
             % Balance Car at closest to average corner
@@ -88,7 +90,7 @@ classdef CarTire < handle
             % Calculate max lateral acceleration at corner radii using balanced car.
             T.LateralAccelerationMap = struct('accelerations', arrayfun(@(radius)(LateralGCalculator(T,CarObject,'',radius)), TrackCornerRadii),...
                                               'radii', TrackCornerRadii);
-            T.MaxLateralAcceleraton = max(T.LateralAccelerationMap.accelerations);
+            T.MaxLateralAcceleration = max(T.LateralAccelerationMap.accelerations);
         end
         
         function lateralG = LateralGCalculator(T,CarObject,Balance,Radius)
@@ -209,13 +211,17 @@ classdef CarTire < handle
             
         end
         
-        function LongitudinalMap = LongitudinalGMapCalculator(T, CarObject)
+        function CalculateLongitudinalGMap(T, CarObject)
             Velocities = 0:10:100;
-            LongitudinalAccelerations = arrayfun(@(velocity)(LongitudinalGCalculator(T, CarObject, velocity)), Velocities);
-            LongitudinalMap = struct('accelerations', LongitudinalAccelerations, 'velocities', Velocities);
+            [ForwardGs, BrakingGs] = arrayfun(@(velocity)(LongitudinalGCalculator(T, CarObject, velocity)), Velocities);
+            T.ForwardAccelerationMap = struct('accelerations', ForwardGs, 'velocities', Velocities);
+            T.BrakingAccelerationMap = struct('accelerations', BrakingGs, 'velocities', Velocities);
+            
+            T.MaxForwardAcceleration = max(T.ForwardAccelerationMap.accelerations);
+            T.MaxBrakingAcceleration = max(T.BrakingAccelerationMap.accelerations);
         end
         
-        function LongitudinalGCalculator(T,CarObject, Velocity)
+        function [forwardG, brakingG] = LongitudinalGCalculator(T,CarObject, Velocity)
             
             Kf = CarObject.Suspension.LinearSpring(1);
             Kr = CarObject.Suspension.LinearSpring(2);
@@ -256,7 +262,7 @@ classdef CarTire < handle
                 I = I1;
             end
             
-            T.MaxForwardAcceleration = RearGs(I);
+            forwardG = RearGs(I);
             
             Gs = -(0:0.01:5)';
             
@@ -290,7 +296,7 @@ classdef CarTire < handle
 
             if I
            
-                T.MaxBrakingAcceleration = OutGs(I);
+                brakingG = OutGs(I);
                 
             else
                 disp('Warning, car flips before brake lockup')
