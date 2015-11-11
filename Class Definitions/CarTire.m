@@ -127,14 +127,8 @@ classdef CarTire < handle
                 Fz = LateralWeightTransfer( Gs,Ws,Wfus,Wrus,FR,Tf,Tr,Kf,Kr,hCG,hfus,hrus,hfrc,hrrc );
 
                 Velocity = sqrt(Gs * 32.2 * Radius);
-                Downforce = CarObject.LiftCoefficient * CarObject.FrontCrossSection * Velocity^2;
-                AeroFyFront = Downforce / 2;  % TODO: Change to use Center of Pressure
-                AeroFyRear = Downforce / 2;
                 
-                Fz(1) = Fz(1) + AeroFyFront;
-                Fz(2) = Fz(2) + AeroFyFront;
-                Fz(3) = Fz(3) + AeroFyRear;
-                Fz(4) = Fz(4) + AeroFyRear;
+                Fz = Fz + CarObject.CalculateAeroEffects(Velocity);
                 
                 [Fy,SA] = T.TireModel(Fz,'Lateral');
 
@@ -215,7 +209,13 @@ classdef CarTire < handle
             
         end
         
-        function LongitudinalGCalculator(T,CarObject)
+        function LongitudinalMap = LongitudinalGMapCalculator(T, CarObject)
+            Velocities = 0:10:100;
+            LongitudinalAccelerations = arrayfun(@(velocity)(LongitudinalGCalculator(T, CarObject, velocity)), Velocities);
+            LongitudinalMap = struct('accelerations', LongitudinalAccelerations, 'velocities', Velocities);
+        end
+        
+        function LongitudinalGCalculator(T,CarObject, Velocity)
             
             Kf = CarObject.Suspension.LinearSpring(1);
             Kr = CarObject.Suspension.LinearSpring(2);
@@ -233,8 +233,10 @@ classdef CarTire < handle
             Gs = (0:0.01:2)';
             
             Fz = LongitudinalWeightTransfer( Kf, Kr, Kt, Gs, Ws, Wfus, Wrus, hCG, PC, FR, L );
+            
+            Fz = Fz + CarObject.CalculateAeroEffects(Velocity);
 
-            [Fx,SR] = T.TireModel(Fz,'Longitudinal');
+            [Fx, SR] = T.TireModel(Fz,'Longitudinal');
 
             FxRear  = Fx(:,3) + Fx(:,4);
 

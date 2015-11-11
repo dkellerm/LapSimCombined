@@ -265,6 +265,27 @@ classdef Car < handle
             LookUpTable = [Velocity,Drag,AxleRPM,MotorRPM,BrakeTorque,BackGs,LateralGs,TractiveLimit];
             
         end
+        
+        function [deltaFz] = CalculateAeroEffects(CarObject, Velocity)
+            %   Weight Transfer Equations from: Solve[{drag*(CoPz - CGz) + lift*-1*(CoPx - CGx) - Fy*frontAxleDistance + Ry*rearAxleDistance == 0, Fy + Ry - lift == 0}, {Fy, Ry}]
+            
+            lift = CarObject.LiftCoefficient * Velocity^2 * CarObject.FrontCrossSection;
+            drag = CarObject.DragCoefficient * Velocity^2 * CarObject.FrontCrossSection;
+            
+            frontAxleDistance = CarObject.CG(1);
+            rearAxleDistance = CarObject.Chassis.Length - CarObject.CG(1);
+            
+            Fy_diff = -1 * ((CarObject.CG(3) - CarObject.CenterOfPressure(3)) * drag + (CarObject.CenterOfPressure(1) - CarObject.CG(1)) * lift - lift * rearAxleDistance)...
+                / CarObject.Chassis.Length;
+            Ry_diff = -1 * ((CarObject.CG(3) + CarObject.CenterOfPressure(3)) * drag + (CarObject.CetnerOfPressure(1) - CarObject.CG(1)) * lift - lift * frontAxleistance)...
+                / CarObject.Chassis.Length;
+            
+            deltaFz = zeros(4);
+            deltaFz(1) = Fy_diff;
+            deltaFz(2) = Fy_diff;
+            deltaFz(3) = Ry_diff;
+            deltaFz(4) = Ry_diff;
+        end
             
     end
     
