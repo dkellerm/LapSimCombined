@@ -62,15 +62,25 @@ rho = setupSheetData(84);
 cop = setupSheetData(85:87);
 
 
-% Similar Driveline
+% Driveline
 
-        Tmult = setupSheetData(57); % torque multiplier
-        PrimaryGear = setupSheetData(63);
-        FinalDrive = setupSheetData(64);
-        Efficiency = setupSheetData(65);
-        SprungMass = setupSheetData(66); % lb
-        UnsprungMass = setupSheetData(67:68); % Front Back (lb)
-        J = setupSheetData(69); % slug in^2
+Efficiency = setupSheetData(65);
+SprungMass = setupSheetData(66); % lb
+UnsprungMass = setupSheetData(67:68); % Front Back (lb)
+J = setupSheetData(69); % slug in^2
+
+Tmult = setupSheetData(57); % torque multiplier
+PrimaryGear = setupSheetData(63);
+FinalDrive = setupSheetData(64);
+FinalDriveRatio = Tmult*PrimaryGear*FinalDrive;
+
+GearRatios = setupSheetData(58:62);
+
+% Remove unused ratios
+UnusedGearRatios = GearRatios == 0;
+GearRatios(UnusedGearRatios) = [];
+
+Driveline = CarDriveline(GearRatios,Efficiency,SprungMass,UnsprungMass,CG,J,FinalDriveRatio);
         
 switch tabName
     
@@ -78,7 +88,7 @@ switch tabName
         % Electric Motor Parameters
         
         RPMS = (0:1:3500)';
-        T = ones(3001,1)*1637.39; % in lbf
+        T = ones(3001,1)*1637.39 * Tmult; % in lbf
         T = [T;(((3001:1:3500)'-3000)/(3500-3000))*(0-1637.39)+1637.39];
         E = ones(length(RPMS),1)*0.95;
         OutputCurve = [RPMS,T,E];
@@ -86,10 +96,6 @@ switch tabName
         Weight = 0; % lb
         Motor = CarMotor(OutputCurve,NMotors,Weight,CG);
         
-        % Driveline Parameters
-        
-        GearRatio = setupSheetData(58);
-
         % Battery Parameters
         
         Capacity = setupSheetData(89); % kWh
@@ -107,7 +113,7 @@ switch tabName
         RPMS_raw = xlsread('torquecurves.xlsx',engine,'C:C');
         T_raw = xlsread('torquecurves.xlsx',engine,'E:E'); %in-lbf
         RPMS = (min(RPMS_raw):max(RPMS_raw))';
-        T = interp1(RPMS_raw,T_raw,RPMS)*12;
+        T = interp1(RPMS_raw,T_raw,RPMS)*12 * Tmult;
         H_raw = xlsread('torquecurves.xlsx',engine,'F:F');
         H = interp1(RPMS_raw,H_raw,RPMS);
         
@@ -141,18 +147,8 @@ switch tabName
         
         % Driveline Parameters
         
-        % GearRatio = [ xlsread('SetupSheets.xlsx',setup,'BF6:BJ6') ];
-        GearRatio = setupSheetData(58)*Tmult*PrimaryGear*FinalDrive;
        
 end
-
-        Driveline = CarDriveline(GearRatio,Efficiency,SprungMass,UnsprungMass,CG,J,PrimaryGear,FinalDrive,Tmult,tabName);
-       
-        if setupSheetData(4) == 1
-            Driveline.DrivetrainType = 'Combustion';
-        else
-            Driveline.DrivetrainType = 'Electric';
-        end
 
 % Car Parameters
 
