@@ -13,9 +13,12 @@ classdef CarDriveline < handle
         J
         FinalDriveRatio
         OutputCurve % [AxleRPM, AxleTorque, MotorRPM, MotorTorque, MotorEfficiency, GearNumber]
+        OriginalOutputCurve
+        CurrentTF
+        CurrentRPMLimit
     end
     methods
-        function D = CarDriveline(GearRatios,Efficiency,SprungM,UnsprungM,CG,J,FinalDriveRatio)
+        function D = CarDriveline(GearRatios,Efficiency,SprungM,UnsprungM,CG,J,FinalDriveRatio, MotorOutputCurve)
             D.GearRatios = GearRatios;
             D.Efficiency = Efficiency;
             D.Weight = SprungM + sum(UnsprungM);
@@ -24,6 +27,12 @@ classdef CarDriveline < handle
             D.UnsprungMass = UnsprungM;
             D.J = J;
             D.FinalDriveRatio = FinalDriveRatio;
+            
+            D.CurrentTF = NaN;
+            D.CurrentRPMLimit = NaN;
+            
+            CalculateOutputCurve(D, MotorOutputCurve);
+            D.OriginalOutputCurve = OutputCurve;
         end
         
         function CalculateOutputCurve(D, MotorOutputCurve)            
@@ -101,8 +110,31 @@ classdef CarDriveline < handle
             D.OutputCurve(:,1) = D.OutputCurve(:,1) / D.FinalDriveRatio;
             D.OutputCurve(:,2) = D.OutputCurve(:,2) * D.FinalDriveRatio *  D.Efficiency;
             
+            if ~isnan(D.CurrentRPMLimit)
+                D.SetRPMLimit(D.CurrentRPMLimit);
+            end
+            
+            if ~isnan(D.CurrentTF)
+                D.SetTorqueFactor(D.CurrentTF);
+            end
+            
             plot(D.OutputCurve(:,1), D.OutputCurve(:,2));
         end
+        
+        function ResetTorqueCurve(D)
+            D.OutputCurve = D.OriginalOutputCurve;
+        end
+        
+        function SetTorqueFactor(D, TF)
+            D.OutputCurve(:,2) = D.OutputCurve(:,2) * TF;
+            D.OutputCurve(:,4) = D.OutputCurve(:,4) * TF;
+        end
+        
+        function SetRPMLimit(D, RPMLimit)
+            D.OutputCurve(RPMLimit+2:end,:) = [];
+        end
+        
+        
     end
 end
 
