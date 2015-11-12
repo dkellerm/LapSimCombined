@@ -44,6 +44,10 @@ classdef CarDriveline < handle
                 possibleShiftPoints = cell(length(D.ShiftPoints),1);
                 for i=2:length(D.GearRatios)
                     possibleShiftPoints{i-1} = intersections(OutputCurves(i-1,:,1), OutputCurves(i-1,:,2), OutputCurves(i,:,1), OutputCurves(i,:,2), true);
+                    
+                    % Remove any intersections at 0
+                    zeroIntersections = possibleShiftPoints{i-1} == 0;
+                    possibleShiftPoints{i-1}(zeroIntersections) = [];
                 end
 
                 % Take the first intersection
