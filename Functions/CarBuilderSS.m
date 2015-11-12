@@ -56,8 +56,11 @@ Brakes = CarBrakes(Torque,SprungMass,UnsprungMass,CG,J);
 % Aero Parameters
 
 Drag = setupSheetData(81);
-CrossArea = setupSheetData(82); % in^2
-rho = setupSheetData(83);
+Lift = setupSheetData(82);
+CrossArea = setupSheetData(83); % in^2
+rho = setupSheetData(84);
+cop = setupSheetData(85:87);
+
 
 % Similar Driveline
 
@@ -89,8 +92,8 @@ switch tabName
 
         % Battery Parameters
         
-        Capacity = setupSheetData(85); % kWh
-        Weight = setupSheetData(86); % lb
+        Capacity = setupSheetData(89); % kWh
+        Weight = setupSheetData(90); % lb
         
         Battery = CarBattery(Capacity,Weight,CG);
         
@@ -110,12 +113,12 @@ switch tabName
         
         % Fuel Map
         
-        Capacity = setupSheetData(85); % Gal
-        Weight = setupSheetData(86); % lb
-        fuel_step = setupSheetData(87);
-        fuel_corner = setupSheetData(88);
-        fuel_brake = setupSheetData(89);
-        fuel_shift = setupSheetData(90);
+        Capacity = setupSheetData(89); % Gal
+        Weight = setupSheetData(90); % lb
+        fuel_step = setupSheetData(91);
+        fuel_corner = setupSheetData(92);
+        fuel_brake = setupSheetData(93);
+        fuel_shift = setupSheetData(94);
         % fuel_map = xlsread('SetupSheets.xlsx',setup,'CM6');
         
         fuel_map_raw = [ 0 .0001 .0003 .0004 .0005 .0006 .0007 .0009 .0010 .0011 .0012 ...              % GET CORRECTED VALUES (HAND CALCS OR WAVE),
@@ -155,6 +158,9 @@ end
 
 
 C = Car(Brakes,Driveline,Motor,Chassis,Battery,Suspension,Tire,Drag,CrossArea);
+C.LiftCoefficient = Lift;
+C.Rho = rho;
+C.CenterOfPressure = cop;
 
 end
 

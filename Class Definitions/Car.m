@@ -12,8 +12,9 @@ classdef Car < handle
         Tire
         DragCoefficient
         LiftCoefficient
-        LiftCenterOfPressure %in
+        CenterOfPressure %in
         FrontCrossSection %in^2
+        Rho %slug/ft^3
         Weight
         CG
         SprungMass
