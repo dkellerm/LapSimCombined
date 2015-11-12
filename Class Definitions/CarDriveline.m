@@ -33,7 +33,7 @@ classdef CarDriveline < handle
         function CalculateOutputCurve(D, MotorOutputCurve)
             if length(D.GearRatios) > 1
                 D.ShiftPoints = zeros(length(D.GearRatios) - 1,1);
-                OutputCurves = zeros(length(D.GearRatios), length(MotorOutputCurve), 3);
+                OutputCurves = zeros(length(D.GearRatios), length(MotorOutputCurve), 5);
                 
                 % Create Output Curves for each gear
                 for i=1:length(D.GearRatios)
@@ -55,7 +55,7 @@ classdef CarDriveline < handle
                 
                 % Create the axle output curve. Uses 1 rpm increments.
                 maxAxleRPM = max(OutputCurves(:,end,1));
-                D.OutputCurve = zeros(maxAxleRPM + 1, 4);
+                D.OutputCurve = zeros(maxAxleRPM + 1, 6);
                 D.OutputCurve(:,1) = 0:maxAxleRPM;
                 
                 for i=1:length(D.GearRatios)
@@ -64,16 +64,19 @@ classdef CarDriveline < handle
                         D.OutputCurve(1:D.ShiftPoints(i), 3) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,3), D.OutputCurve(1:D.ShiftPoints(i),1));
                         D.OutputCurve(1:D.ShiftPoints(i), 4) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,4), D.OutputCurve(1:D.ShiftPoints(i),1));
                         D.OutputCurve(1:D.ShiftPoints(i), 5) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,5), D.OutputCurve(1:D.ShiftPoints(i),1));
+                        D.OutputCurve(1:D.ShiftPoints(i), 6) = i;
                     elseif i==length(D.GearRatios) % Final gear goes until end of matrix.
                         D.OutputCurve(D.ShiftPoints(i-1):end, 2) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,2), D.OutputCurve(D.ShiftPoints(i-1):end, 1));
                         D.OutputCurve(D.ShiftPoints(i-1):end, 3) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,3), D.OutputCurve(D.ShiftPoints(i-1):end, 1));
                         D.OutputCurve(D.ShiftPoints(i-1):end, 4) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,4), D.OutputCurve(D.ShiftPoints(i-1):end, 1));
                         D.OutputCurve(D.ShiftPoints(i-1):end, 5) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,5), D.OutputCurve(D.ShiftPoints(i-1):end, 1));
+                        D.OutputCurve(D.ShiftPoints(i-1):end, 6) = i;
                     else % Intermediate gear fills space between two shift points
                         D.OutputCurve(D.ShiftPoints(i-1):D.ShiftPoints(i), 2) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,2), D.OutputCurve(D.ShiftPoints(i-1):D.ShiftPoints(i),1));
                         D.OutputCurve(D.ShiftPoints(i-1):D.ShiftPoints(i), 3) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,3), D.OutputCurve(D.ShiftPoints(i-1):D.ShiftPoints(i),1));
                         D.OutputCurve(D.ShiftPoints(i-1):D.ShiftPoints(i), 4) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,4), D.OutputCurve(D.ShiftPoints(i-1):D.ShiftPoints(i),1));
                         D.OutputCurve(D.ShiftPoints(i-1):D.ShiftPoints(i), 5) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,5), D.OutputCurve(D.ShiftPoints(i-1):D.ShiftPoints(i),1));
+                        D.OutputCurve(D.ShiftPoints(i-1):D.ShiftPoints(i), 6) = i;
                     end
                 end
                 
