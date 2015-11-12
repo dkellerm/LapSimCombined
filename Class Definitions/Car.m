@@ -92,7 +92,7 @@ classdef Car < handle
             % Compare acceleration to possible acceleration from tires and reduce
             % accelerations to those values
             maxForwardGsTire = interp1(CarObject.Tire.ForwardAccelerationMap.velocities, CarObject.Tire.ForwardAccelerationMap.accelerations, Velocity, 'spline');
-            ForwardGs = max(MotorGs, maxForwardGsTire);
+            ForwardGs = min(MotorGs, maxForwardGsTire);
             
    %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%         
            %Shifting affects GearRatio in MotorT
@@ -116,10 +116,9 @@ classdef Car < handle
             RollingR = CarObject.Weight*CarObject.Tire.RollingResistance; % Rolling Resistance force for car configuration
 
             % Assume brakes use tire at full potential
-            ForwardGs = interp1(CarObject.Tire.BrakingAccelerationMap.velocities, CarObject.Tire.BrakingAccelerationMap.accelerations, Velocity, 'spline');
+            ForwardGs = -1 * interp1(CarObject.Tire.BrakingAccelerationMap.velocities, CarObject.Tire.BrakingAccelerationMap.accelerations, Velocity, 'spline');
             
-            % Calculate wheel force based on tire capability. Includes drag
-            % strangely.
+            % Calculate wheel force based on tire capability.
             WheelF = CarObject.Keq*CarObject.Weight*ForwardGs - Drag - RollingR; 
             
             % Calculate axle and motor rpms based on velocity
@@ -127,7 +126,7 @@ classdef Car < handle
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       %Shifting
             MotorRPM = AxleRPM*CarObject.Driveline.GearRatio;
-            % Recalculate applied brake torque based on wheel force
+            % Calculate applied brake torque based on wheel force
             BrakeTorque = WheelF*CarObject.Tire.Radius;
             
             % Straight brake curve, therefore lateral Gs is always zero
@@ -225,7 +224,7 @@ classdef Car < handle
             Drag(I) = [];
             % Find maximum possible backward Gs at a given lateral G from
             % tire model
-            BackGs = CarObject.Tire.GGCurve(LateralGs,'Brake');
+            BackGs = CarObject.Tire.GGCurve(LateralGs,'Brake',Velocity);
             
             % Calculate wheel force and brake torque based on backward Gs
             WheelF = BackGs*CarObject.Weight*CarObject.Keq - Drag - RollingR;

@@ -268,7 +268,7 @@ classdef CarTire < handle
                 I = I1;
             end
             
-            forwardG = RearGs(I);
+            forwardG = RearGs(I)
             
             Gs = -(0:0.01:5)';
             
@@ -306,7 +306,7 @@ classdef CarTire < handle
                 
             else
                 disp('Warning, car flips before brake lockup')
-                T.MaxBrakingAcceleration = OutGs(end);
+                brakingG = OutGs(end);
                 
             end
             
@@ -347,12 +347,19 @@ classdef CarTire < handle
             %**************************************************************
             % NONE    
             
+            radii = (Velocity.^2)./LateralA; % Will result in NaN for velocities/Lat A's of zero.
+            maxLateralAs = interp1(T.LateralAccelerationMap.radii, T.LateralAccelerationMap.accelerations, radii, 'spline');
+            
             if strcmp(BrakeThrottle,'Throttle')
-                maxForwardA = interp1(CarObject.Tire.ForwardAccelerationMap.velocities, CarObject.Tire.ForwardAccelerationMap.accelerations, Velocity, 'spline');
-                LongA = maxForwardA.*sqrt(1-(LateralA/T.MaxLateralAcceleration).^2);
+                maxForwardA = interp1(T.ForwardAccelerationMap.velocities, T.ForwardAccelerationMap.accelerations, Velocity, 'spline');
+                LongA = maxForwardA.*sqrt(1-(LateralA./maxLateralAs).^2);
+                I = isnan(LongA);
+                LongA(I) = maxForwardA(I);
             elseif strcmp(BrakeThrottle,'Brake')
-                maxBrakeA = interp1(CarObject.Tire.BrakingAccelerationMap.velocities, CarObject.Tire.BrakingAccelerationMap.accelerations, Velocity, 'spline');
-                LongA = abs(maxBrakeA.*sqrt(1-(LateralA/T.MaxLateralAcceleration).^2));
+                maxBrakeA = interp1(T.BrakingAccelerationMap.velocities, T.BrakingAccelerationMap.accelerations, Velocity, 'spline');
+                LongA = abs(maxBrakeA.*sqrt(1-(LateralA./maxLateralAs).^2));
+                I = isnan(LongA);
+                LongA(I) = -1 * maxBrakeA(I);
             end
         end
         
