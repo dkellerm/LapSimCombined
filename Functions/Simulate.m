@@ -29,6 +29,7 @@ function [ Tele ] = Simulate( CarObject,TrackObject )
 
 dx = 1;
 
+CarObject.Driveline.CalculateOutputCurve(CarObject.Motor.OutputCurve);
 CarObject.Tire.CalculateLateralGMap(CarObject, TrackObject);
 CarObject.Tire.CalculateLongitudinalGMap(CarObject);
 
@@ -61,7 +62,7 @@ for i = 1:S
     RArray(i,:) = [R,i];
     
     if R
-        AccTable = CarObject.CornerAccTableGenerator(R,Velocity,Drag,MotorE);
+        AccTable = CarObject.CornerAccTableGenerator(R,Velocity,Drag);
         DecTable = CarObject.CornerDecTableGenerator(R,Velocity,Drag);
         TrackObject.Track(i).AccTable = AccTable;
         TrackObject.Track(i).DecTable = DecTable;

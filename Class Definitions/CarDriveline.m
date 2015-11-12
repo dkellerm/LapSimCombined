@@ -85,21 +85,23 @@ classdef CarDriveline < handle
                     OutputCurves(3,:,1), OutputCurves(3,:,2), ...
                     OutputCurves(4,:,1), OutputCurves(4,:,2), ...
                     OutputCurves(5,:,1), OutputCurves(5,:,2), ...
-                    D.OutputCurve(:,1), D.OutputCurve(:,2));
+                    D.OutputCurve(:,1), D.OutputCurve(:,2))
             else % Single Gear
-                maxAxleRPM = round(max(MotorOutputCurve(:,1)));
+                maxAxleRPM = round(max(MotorOutputCurve(:,1)) / D.GearRatios(1));
                 D.OutputCurve = zeros(maxAxleRPM + 1, 6);
                 D.OutputCurve(:,1) = 0:maxAxleRPM;
                 
-                D.OutputCurve(:, 2) = interp1(MotorOutputCurve(:,1), MotorOutputCurve(:,2), D.OutputCurve(:,1));
-                D.OutputCurve(:, 3) = D.OutputCurve(:,1);
-                D.OutputCurve(:, 4) = D.OutputCurve(:,2);
+                D.OutputCurve(:, 2) = interp1(MotorOutputCurve(:,1), MotorOutputCurve(:,2), D.OutputCurve(:,1) * D.GearRatios(1)) * D.GearRatios(1);
+                D.OutputCurve(:, 3) = D.OutputCurve(:,1) / D.GearRatios(1);
+                D.OutputCurve(:, 4) = D.OutputCurve(:,2) * D.GearRatios(1);
                 D.OutputCurve(:, 5) = interp1(MotorOutputCurve(:,1), MotorOutputCurve(:,3), D.OutputCurve(:,1));
                 D.OutputCurve(:, 6) = 1;
             end
             
             D.OutputCurve(:,1) = D.OutputCurve(:,1) / D.FinalDriveRatio;
             D.OutputCurve(:,2) = D.OutputCurve(:,2) * D.FinalDriveRatio;
+            
+            plot(D.OutputCurve(:,1), D.OutputCurve(:,2));
         end
     end
 end

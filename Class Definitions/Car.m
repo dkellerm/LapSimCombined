@@ -53,63 +53,48 @@ classdef Car < handle
         end      
             
         function [ LookUpTable ] = StraightAccTableGenerator( CarObject )
-        
-            NMotors = CarObject.Motor.NMotors;
-
             RHO = CarObject.Rho; %slugs/ft^3
-
-            RollingR = CarObject.Weight*CarObject.Tire.RollingResistance; % Rolling Resistance force for car configuration
-
-            % Pull Motor RPM values from motor torque curve
-            MotorRPM = CarObject.Motor.OutputCurve(:,1);
-            % Pull Motor Torque values from motor torque curve
-            MotorT   = NMotors*CarObject.Motor.OutputCurve(:,2);  %in-lb
-            % Pull Motor Efficiency values from motor torque curve
-            MotorE   = (CarObject.Motor.OutputCurve(:,3));
-            % Calculate Axle RPM for each Motor RPM value
             
-  %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
-  % Need to incorporate sifting in AxleRPM for CarObject.Driveline.GearRatio          
-            AxleRPM  = MotorRPM/CarObject.Driveline.GearRatio;
+            RollingR = CarObject.Weight*CarObject.Tire.RollingResistance; % Rolling Resistance force for car configuration
+            
+            MotorRPM = CarObject.Driveline.OutputCurve(:,3);
+            MotorT   = CarObject.Driveline.OutputCurve(:,4);  %in-lb
+            MotorE   = CarObject.Driveline.OutputCurve(:,5);
+            AxleRPM  = CarObject.Driveline.OutputCurve(:,1);
+            AxleT    = CarObject.Driveline.OutputCurve(:,2); % in-lb
+            WheelF   = AxleT/CarObject.Tire.Radius; % lbf
+            
             % Calculate Car Velocity for each Axle RPM value
             Velocity = CarObject.Tire.Radius*AxleRPM*pi/30; % in/s
             % Calculate corresponding drag for each veloicty
-            Drag     = (0.5*RHO*CarObject.DragCoefficient*CarObject.FrontCrossSection.*Velocity.^2)/12^4; % lbf
-     %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     %AxleT gear ratio
-            % Caluclate axle torque for each motor torque value
-            AxleT    = MotorT*CarObject.Driveline.GearRatio*CarObject.Driveline.Efficiency; % in lbf
-            % Calculate force at the wheels for each axle torque value
-            WheelF   = AxleT/CarObject.Tire.Radius; % lbf
-            % Calculate theoretical acceleration for each wheel force value in in/s^2
-            % and Gs
+            Drag     = (0.5*RHO*CarObject.DragCoefficient*CarObject.FrontCrossSection.*Velocity.^2)/12^4; % lbfe
             
-   %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
-   % Shifting affects WheelF in MotorA
-            MotorA   = (WheelF - Drag - RollingR)/(CarObject.Keq*CarObject.Weight/(12*32.174)); % in/s^2
-            MotorGs  = MotorA/(12*32.174);
-
-            % Compare acceleration to possible acceleration from tires and reduce
-            % accelerations to those values
+            MaxDrivelineA   = (WheelF - Drag - RollingR)/(CarObject.Keq*CarObject.Weight/(12*32.174)); % in/s^2
+            MaxDrivelineGs  = MaxDrivelineA/(12*32.174);
+            
+            % Compare driveline acceleration to possible acceleration from
+            % tires and reduce accelerations to those values
             maxForwardGsTire = interp1(CarObject.Tire.ForwardAccelerationMap.velocities, CarObject.Tire.ForwardAccelerationMap.accelerations, Velocity, 'spline');
-            ForwardGs = min(MotorGs, maxForwardGsTire);
+            ForwardGs = min(MaxDrivelineGs, maxForwardGsTire);
             
-   %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%         
-           %Shifting affects GearRatio in MotorT
-            MotorT = (CarObject.Keq*CarObject.Weight*ForwardGs + Drag + RollingR)*CarObject.Tire.Radius/((CarObject.Driveline.GearRatio)*CarObject.Driveline.Efficiency);
+            % Recalculate Driveline torque values based on available
+            % traction.
+            AdjustedWheelF = ForwardGs*(12/32.174);
+            AdjustedAxleT = AdjustedWheelF * CarObject.Tire.Radius;
+            AdjustedMotorT = AdjustedAxleT ./ AxleT .* MotorT;
+            
             
             % Calculate power consumption for each motor rpm
-            Power    = (MotorT.*MotorRPM./MotorE)*pi/30;
+            Power    = (AdjustedMotorT.*MotorRPM./MotorE)*pi/30;
             
             LateralGs = zeros(length(Velocity),1);
             
             % Tractive limit is reached at all of the indexes that were
             % previously adjusted to match tire acceleration
             [~, TractiveLimit] = ismember(ForwardGs, maxForwardGsTire);
-                        %    1       2     3        4       5      6      7
-            LookUpTable = [Velocity,Drag,AxleRPM,MotorRPM,MotorT,MotorE,Power,ForwardGs,LateralGs,TractiveLimit];
             
-            
+            %    1       2     3        4            5         6      7       8         9        10
+            LookUpTable = [Velocity,Drag,AxleRPM,MotorRPM,AdjustedMotorT,MotorE,Power,ForwardGs,LateralGs,TractiveLimit];
         end
             
         function [ LookUpTable ] = StraightDecTableGenerator(CarObject,Velocity,Drag)
@@ -123,25 +108,21 @@ classdef Car < handle
             
             % Calculate axle and motor rpms based on velocity
             AxleRPM = Velocity/(CarObject.Tire.Radius*pi/30);
-      %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      %Shifting
-            MotorRPM = AxleRPM*CarObject.Driveline.GearRatio;
+            MotorRPM = CarObject.Driveline.OutputCurve(round(AxleRPM)+1, 3);
             % Calculate applied brake torque based on wheel force
             BrakeTorque = WheelF*CarObject.Tire.Radius;
             
             % Straight brake curve, therefore lateral Gs is always zero
             LateralGs = zeros(length(Velocity),1);
             
-            % Tractive limit is reached at all of the indexes that were
-            % previously adjusted to match tire acceleration
+            % Tractive limit is reached at all points with ideal braking
             TractiveLimit = ones(length(ForwardGs),1);
-                        %    1       2     3        4       5           6           7
+            
+                        %    1       2     3        4       5           6          7             8
             LookUpTable = [Velocity,Drag,AxleRPM,MotorRPM,BrakeTorque,ForwardGs,LateralGs,TractiveLimit];
-
-
         end
         
-        function [ LookUpTable ] = CornerAccTableGenerator( CarObject,R,Velocity,Drag,MotorE )
+        function [ LookUpTable ] = CornerAccTableGenerator( CarObject,R,Velocity,Drag)
         
             RollingR = CarObject.Weight*CarObject.Tire.RollingResistance; % Rolling Resistance force for car configuration
             
@@ -157,7 +138,6 @@ classdef Car < handle
             LateralGs(I) = [];
             Velocity(I) = [];
             Drag(I) = [];
-            MotorE(I) = [];
             % Find max forward Gs available from tires for each lateral G
             ForwardGs = CarObject.Tire.GGCurve(LateralGs,'Throttle', Velocity);
 
@@ -165,43 +145,41 @@ classdef Car < handle
             % on given forward Gs
             WheelF = ForwardGs*CarObject.Weight*CarObject.Keq + Drag + RollingR;
             AxleT  = WheelF*CarObject.Tire.Radius;
-  %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
-  %MotorT is affected by shifting thourgh CarObject.Driveline.GearRatio
-            
-            MotorT = AxleT/((CarObject.Driveline.GearRatio)*CarObject.Driveline.Efficiency);
-            % Pull available motor torque
-            MotorTrueT = CarObject.Motor.OutputCurve(:,2);
-            % Eliminate motor torques that occur at velocities above
-            % available lateral Gs
-            MotorTrueT(I) = [];
-            
-            % Find calculated motor torques that are more than the motor is
-            % capable of
-            I = MotorT > MotorTrueT;
-            % And set those values to available motor torque
-            MotorT(I) = MotorTrueT(I);
-            % Recalculate axle torque, wheel force and forward Gs based on adjusted
-            % available torque values
-            
-  %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
-  % AxleT affected by shifting through CarObject.Driveline.GearRatio
-            AxleT = MotorT*(CarObject.Driveline.GearRatio)*CarObject.Driveline.Efficiency; % in lbf
-            WheelF = AxleT/CarObject.Tire.Radius; % lbf
-            ForwardGs = (WheelF - Drag - RollingR)/(CarObject.Keq*CarObject.Weight);
-            % calculate axle and motor rpms from given velocity array
             AxleRPM = Velocity*30/(pi*CarObject.Tire.Radius);
             
-  %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
-  % MotorRPM affected by shifting through CarObject.Driveline.GearRatio
-            MotorRPM = AxleRPM*(CarObject.Driveline.GearRatio);
-            % calculate power consumption based on motor torque, rpm and
-            % efficiency
-            Power = ((MotorT.*MotorRPM./MotorE)*pi/30);
+            % Round axle rpms to use as index for driveline output curve.
+            AxleRPMIndexes = round(AxleRPM) + 1;
+            
+            % Find drive ratio at all AxleRPMs
+            DriveRatio = CarObject.Driveline.OutputCurve(AxleRPMIndexes,3) ./ AxleRPM;
+
+            % Pull available axle torques for axle rpms
+            AxleTAvailable = CarObject.Driveline.OutputCurve(AxleRPMIndexes,2);
+            
+            % Find calculated axle torques that are more than the motor is
+            % capable of
+            I = AxleT > AxleTAvailable;
+            % And set those values to available motor torque
+            AxleT(I) = AxleTAvailable(I);
             
             % Tractive limit is reached at all indexes not limited by motor
             % torque
             TractiveLimit = ~I;
-
+            
+            % Recalculate motor torque, motor rpm, wheel force, and forward
+            % Gs based on adjusted available torque values.
+            
+            MotorT = AxleT ./ DriveRatio;
+            MotorRPM = AxleRPM .* DriveRatio;
+            MotorE = CarObject.Driveline.OutputCurve(AxleRPMIndexes, 5);
+            
+            WheelF = AxleT/CarObject.Tire.Radius; % lbf
+            ForwardGs = (WheelF - Drag - RollingR)/(CarObject.Keq*CarObject.Weight);
+            
+            % calculate power consumption based on motor torque, rpm and
+            % efficiency
+            Power = ((MotorT.*MotorRPM./MotorE)*pi/30);
+            %                  1      2     3       4        5      6     7       8         9          10
             LookUpTable = [Velocity,Drag,AxleRPM,MotorRPM,MotorT,MotorE,Power,ForwardGs,LateralGs,TractiveLimit];
             
         end
@@ -242,15 +220,13 @@ classdef Car < handle
             
             % Calculate axle and motor rpms based on given velocity array
             AxleRPM = Velocity/(CarObject.Tire.Radius*pi/30);
-            
-      %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
-      % MotorRPM affected by CarObject.Driveline.GearRatio      
-      MotorRPM = AxleRPM*(CarObject.Driveline.GearRatio);
+            MotorRPM = CarObject.Driveline.OutputCurve(round(AxleRPM) + 1, 3);
             
             % Tractive limit is reached at all indexes where braking torque
             % is less than the available braking torque
             TractiveLimit = BrakeTorque < sum(CarObject.Brakes.Torque);
-            
+              
+            %                  1      2     3        4         5        6        7           8
             LookUpTable = [Velocity,Drag,AxleRPM,MotorRPM,BrakeTorque,BackGs,LateralGs,TractiveLimit];
             
         end

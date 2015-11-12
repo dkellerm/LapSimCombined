@@ -4,8 +4,8 @@
 % car to run through the Lap Simulator here. Dynamic event results as well
 % as points will be outputted. 
 
-clear all
-clc
+% clear all
+% clc
 
 %winopen('SetupSheets.xlsx'); %Make sure to save excel before running, you can leave it open
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -25,6 +25,6 @@ rowNumber = 6;
 Car = CarBuilderSS('Electric', rowNumber);
 Track = FSAELincoln2013;
 
-[ RawResults,PointResults ] = RPMLimitingAnalysis( Car,Track );
-%Simulate( Car,Track )
-save('BatteryandRPMLimitingAnalysis')
+%[ RawResults,PointResults ] = RPMLimitingAnalysis( Car,Track );
+Simulate( Car,Track )
+%save('BatteryandRPMLimitingAnalysis')
