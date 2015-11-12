@@ -26,7 +26,7 @@ classdef CarDriveline < handle
             D.FinalDriveRatio = FinalDriveRatio;
         end
         
-        function CalculateOutputCurve(D, MotorOutputCurve)
+        function CalculateOutputCurve(D, MotorOutputCurve)            
             if length(D.GearRatios) > 1 % Multiple Gears
                 D.ShiftPoints = zeros(length(D.GearRatios) - 1,1);
                 OutputCurves = zeros(length(D.GearRatios), length(MotorOutputCurve), 5);
@@ -99,7 +99,7 @@ classdef CarDriveline < handle
             end
             
             D.OutputCurve(:,1) = D.OutputCurve(:,1) / D.FinalDriveRatio;
-            D.OutputCurve(:,2) = D.OutputCurve(:,2) * D.FinalDriveRatio;
+            D.OutputCurve(:,2) = D.OutputCurve(:,2) * D.FinalDriveRatio *  D.Efficiency;
             
             plot(D.OutputCurve(:,1), D.OutputCurve(:,2));
         end

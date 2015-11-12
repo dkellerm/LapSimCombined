@@ -81,16 +81,22 @@ UnusedGearRatios = GearRatios == 0;
 GearRatios(UnusedGearRatios) = [];
 
 Driveline = CarDriveline(GearRatios,Efficiency,SprungMass,UnsprungMass,CG,J,FinalDriveRatio);
-        
+
 switch tabName
     
     case 'Electric'
         % Electric Motor Parameters
         
-        RPMS = (0:1:3500)';
-        T = ones(3001,1)*1637.39 * Tmult; % in lbf
-        T = [T;(((3001:1:3500)'-3000)/(3500-3000))*(0-1637.39)+1637.39];
-        E = ones(length(RPMS),1)*0.95;
+        PeakTorque = 1637.39; % in-lb
+        Efficiency = 0.95;
+        RPMLimit = 3500;
+        RPMTaper = 3000;
+        
+        RPMS = (0:1:RPMLimit)';
+        T = ones(RPMTaper + 1, 1) * 1637.39 * Tmult; % in lbf
+        T = [T;(((RPMTaper + 1:1:RPMLimit)'-RPMTaper)/(RPMLimit-RPMTaper))*(0-PeakTorque)+PeakTorque];
+        T = T * Efficiency;
+        E = ones(length(RPMS),1)*Efficiency;
         OutputCurve = [RPMS,T,E];
         NMotors = 1;
         Weight = 0; % lb
@@ -147,7 +153,7 @@ switch tabName
         
         % Driveline Parameters
         
-       
+        
 end
 
 % Car Parameters
