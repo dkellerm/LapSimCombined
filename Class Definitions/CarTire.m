@@ -92,7 +92,6 @@ classdef CarTire < handle
             T.LateralAccelerationMap = struct('accelerations', arrayfun(@(radius)(LateralGCalculator(T,CarObject,'',radius)), TrackCornerRadii),...
                                               'radii', TrackCornerRadii);
             T.MaxLateralAcceleration = max(T.LateralAccelerationMap.accelerations);
-            plot(T.LateralAccelerationMap.radii, T.LateralAccelerationMap.accelerations);
         end
         
         function lateralG = LateralGCalculator(T,CarObject,Balance,Radius)
@@ -268,7 +267,7 @@ classdef CarTire < handle
                 I = I1;
             end
             
-            forwardG = RearGs(I)
+            forwardG = RearGs(I);
             
             Gs = -(0:0.01:5)';
             
