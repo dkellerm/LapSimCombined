@@ -149,9 +149,9 @@ end
         Driveline = CarDriveline(GearRatio,Efficiency,SprungMass,UnsprungMass,CG,J,PrimaryGear,FinalDrive,Tmult,tabName);
        
         if setupSheetData(4) == 1
-            Driveline.tabName = 'Combustion';
+            Driveline.DrivetrainType = 'Combustion';
         else
-            Driveline.tabName = 'Electric';
+            Driveline.DrivetrainType = 'Electric';
         end
 
 % Car Parameters

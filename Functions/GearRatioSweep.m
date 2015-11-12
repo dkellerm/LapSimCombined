@@ -2,8 +2,8 @@ function [ OutTel, Results ] = GearRatioSweep(Car,Track)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
-% GearRatios = (2:0.05:5);
-GearRatios = 2;
+GearRatios = (2:0.5:5);
+%GearRatios = 2;
 
 S = length(GearRatios);
 

@@ -2,7 +2,7 @@ function [ RawResults,PointResults ] = RPMLimitingAnalysis( Car,Track )
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
-GearRatios = (4:0.5:6);
+GearRatios = (3:0.5:6);
 % GearRatios = 2;
 
 S1 = length(GearRatios);
@@ -14,13 +14,17 @@ S2 = length(RPMCutOffs);
 
 RawResults = zeros(S1*2,8,S2);
 
-EnduranceLength = 866142;
+EnduranceLength = 866142; %22km in inches
 
 EnduranceLaps = EnduranceLength/Track.Length;
 
 TF = 1;
 
-for i = 1:S1    
+parfor i = 1:S1
+    Car = CarBuilderSS('Electric', 6);
+    Track = FSAELincoln2013;
+    TF = 1;
+    
     GR = GearRatios(i);
     Car.Driveline.GearRatio = GR;
     
@@ -50,13 +54,16 @@ for i = 1:S1
     end   
 end
 
-Car.Weight = Car.Weight - 38;
-Car.Battery.Capacity = 4.73;
-
 
 TF = 1;
 
-for i = S1+1:S1*2    
+parfor i = S1+1:S1*2 
+    Car = CarBuilderSS('Electric', 6);
+    Track = FSAELincoln2013;
+    TF=1;
+
+    Car.Weight = Car.Weight - 38;
+    Car.Battery.Capacity = 4.73;
     GR = GearRatios(i-S1);
     Car.Driveline.GearRatio = GR;
     

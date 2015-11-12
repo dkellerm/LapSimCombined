@@ -23,8 +23,8 @@ clc
 rowNumber = 6;
 
 Car = CarBuilderSS('Electric', rowNumber);
-Track = FSG2013;
+Track = FSAELincoln2013;
 
-% [ RawResults,PointResults ] = RPMLimitingAnalysis( Car,Track );
-Simulate( Car,Track )
+[ RawResults,PointResults ] = RPMLimitingAnalysis( Car,Track );
+%Simulate( Car,Track )
 save('BatteryandRPMLimitingAnalysis')
