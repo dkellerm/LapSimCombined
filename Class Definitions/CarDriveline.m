@@ -12,12 +12,12 @@ classdef CarDriveline < handle
         J
         PrimaryGear
         FinalDrive
-        tabName
+        DrivetrainType
         Tmult
         Name = '';
     end
     methods
-        function D = CarDriveline(GearRatio,Efficiency,SprungM,UnsprungM,CG,J,PrimaryGear,FinalDrive,Tmult,tabName)
+        function D = CarDriveline(GearRatio,Efficiency,SprungM,UnsprungM,CG,J,PrimaryGear,FinalDrive,Tmult,DrivetrainType)
             D.GearRatio = GearRatio;
             D.Efficiency = Efficiency;
             D.Weight = SprungM + sum(UnsprungM);
@@ -27,23 +27,22 @@ classdef CarDriveline < handle
             D.J = J;
             D.PrimaryGear = PrimaryGear;
             D.FinalDrive = FinalDrive;
-            D.Tmult = Tmult; 
-            D.tabName = tabName;
+            D.Tmult = Tmult;
+            D.DrivetrainType = DrivetrainType;
         end
-                function [MotorRPM,Efficiency] = DriveTransfer(D,RoadSpeed,TireRadius)
-                    switch D.tabName
-                        
-                        case 'Electric'
+        function [MotorRPM,Efficiency] = DriveTransfer(D,RoadSpeed,TireRadius)
+            switch D.DrivetrainType
+                case 'Electric'
                     Efficiency = D.Efficiency;
                     MotorRPM = RoadSpeed/TireRadius*D.GearRatio;
-                        
-                        case 'Combustion'
-                             Efficiency = D.Efficiency;
+                    
+                case 'Combustion'
+                    Efficiency = D.Efficiency;
                     MotorRPM = RoadSpeed/TireRadius*D.GearRatio;
-                    end
-                end
-
+            end
+        end
+        
     end
- end
+end
 
 
