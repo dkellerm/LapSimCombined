@@ -29,7 +29,6 @@ function [ Tele ] = Simulate( CarObject,TrackObject )
 
 dx = 1;
 
-CarObject.Driveline.CalculateOutputCurve(CarObject.Motor.OutputCurve);
 CarObject.Tire.CalculateLateralGMap(CarObject, TrackObject);
 CarObject.Tire.CalculateLongitudinalGMap(CarObject);
 

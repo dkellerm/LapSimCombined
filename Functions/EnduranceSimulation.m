@@ -2,7 +2,7 @@ function [ Energy, Time, TF ] = EnduranceSimulation( Car,Track,EnduranceLength,I
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
-InitialGain = 0.1;
+InitialGain = 0.05;
 SecondOrderGain = 1;
 ReverseGain = 0.5;
 
@@ -18,10 +18,9 @@ ConverganceCount = 0;
 OldError = 100;
 
 while true
-    
     ConverganceCount = ConverganceCount + 1;
     
-    Car.Motor.OutputCurve(:,2) = Car.Motor.OutputCurve(:,2)*TF;
+    Car.Driveline.SetTorqueFactor(TF);
     
     Tele = Simulate(Car,EnduranceTrack);
     FirstLapP = Tele.LapData(1:Track.Length,8)*0.000112985;
@@ -43,19 +42,17 @@ while true
     
     
     if abs(Error) < Car.Battery.Capacity/100
-        Car.Motor.OutputCurve(:,2) = Car.Motor.OutputCurve(:,2)/TF;
+        Car.Driveline.ResetTorqueCurve();
+        'Breaking...'
         break
     end
     
-
     
-    Car.Motor.OutputCurve(:,2) = Car.Motor.OutputCurve(:,2)/TF;
+    %     Adjustment = 0.5*(TF-OldTF);
+    %     OldTF = TF;
+    %     TF = TF - Adjustment;
     
-%     Adjustment = 0.5*(TF-OldTF);
-%     OldTF = TF;
-%     TF = TF - Adjustment;
-    
-    TF = TF + Error*Gain;
+    TF = TF + Error*Gain
     
     if TF > 1;
         break
@@ -71,20 +68,22 @@ while true
         
     end
     
+    figure(1)
+    plot(ErrorTracker,'ro')
+    xlabel('Iteration Number')
+    ylabel('Error (kWh)')
+    grid on
+    figure
+    plot(TFTracker,'ro')
+    xlabel('Iteration Number')
+    ylabel('Torque Factor')
+    grid on
+    
     
 end
 
-%figure
-%plot(ErrorTracker,'ro')
-%xlabel('Iteration Number')
-%ylabel('Error (kWh)')
-%grid on
-%figure
-%plot(TFTracker,'ro')
-%xlabel('Iteration Number')
-%ylabel('Torque Factor')
-%grid on
-    
+
+
 
 
 end

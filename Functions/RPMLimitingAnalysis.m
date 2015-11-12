@@ -1,15 +1,14 @@
-function [ RawResults,PointResults ] = RPMLimitingAnalysis( Car,Track )
+function [ RawResults,PointResults ] = RPMLimitingAnalysis(CarFcn, TrackFcn)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
+Track = TrackFcn();
 GearRatios = (4:0.25:5);
 % GearRatios = 2;
 
 S1 = length(GearRatios);
 
 RPMCutOffs = (3500:-200:2300);
-% RPMCutOffs = 3500;
-
 S2 = length(RPMCutOffs);
 
 RawResults = zeros(S1*2,8,S2);
@@ -18,15 +17,14 @@ EnduranceLength = 866142; %22km in inches
 
 EnduranceLaps = EnduranceLength/Track.Length;
 
-TF = 1;
-
-parfor i = 1:S1
-    Car = CarBuilderSS('Electric', 6);
-    Track = FSAELincoln2013;
+for i = 1:S1
+    Car = CarFcn();
+    Track = TrackFcn();
     TF = 1;
     
     GR = GearRatios(i);
-    Car.Driveline.GearRatio = GR;
+    Car.Driveline.SetGearRatios(GR, Car.Motor.OutputCurve);
+    
     
     Tele = Simulate(Car,Track);
     
@@ -35,13 +33,10 @@ parfor i = 1:S1
     MaxG = Car.Tire.MaxLateralAcceleration;
     TimeSkid = 2*pi*sqrt(9.1/(9.81*MaxG));
     
-    MotorCurve = Car.Motor.OutputCurve;
-    
     for j = 1:S2
-    
-        RPM = RPMCutOffs(j);
+        RPM = RPMCutOffs(j) * GR;
         
-        Car.Motor.OutputCurve(RPM+2:end,:) = [];
+        Car.Driveline.SetRPMLimit(RPM);
         
         [Energy, EndTime, TF ] = EnduranceSimulation(Car,Track,EnduranceLength,TF);
 
@@ -49,54 +44,48 @@ parfor i = 1:S1
 
         if TF > 1;
             TF = 1;
-        end
-        Car.Motor.OutputCurve = MotorCurve;         
+        end        
     end   
 end
 
-
-TF = 1;
-
-parfor i = S1+1:S1*2 
-    Car = CarBuilderSS('Electric', 6);
-    Track = FSAELincoln2013;
-    TF=1;
-
-    Car.Weight = Car.Weight - 38;
-    Car.Battery.Capacity = 4.73;
-    GR = GearRatios(i-S1);
-    Car.Driveline.GearRatio = GR;
-    
-    Tele = Simulate(Car,Track);
-    
-    TimeAutoX = sum(cell2mat(Tele.Results(1)));
-    Time75 = cell2mat(Tele.Results(4));
-    MaxG = Car.Tire.MaxLateralAcceleration;
-    TimeSkid = 2*pi*sqrt(9.1/(9.81*MaxG));
-    
-    MotorCurve = Car.Motor.OutputCurve;
-    
-    for j = 1:S2
-        
-        RPM = RPMCutOffs(j);
-        
-        Car.Motor.OutputCurve(RPM+2:end,:) = [];
-    
-        [Energy, EndTime, TF ] = EnduranceSimulation(Car,Track,EnduranceLength,TF);
-   
-        RawResults(i,:,j) = [TimeAutoX,Time75,TimeSkid,EndTime,Energy,TF,RPM,GR];
-    
-        if TF > 1
-            TF = 1;
-        end
-        
-    end
-    
-    Car.Motor.OutputCurve = MotorCurve;
-    
-end
-
-delete(h)
+% parfor i = S1+1:S1*2 
+%     Car = CarBuilderSS('Electric', 6);
+%     Track = FSAELincoln2013;
+%     TF=1;
+% 
+%     Car.Weight = Car.Weight - 38;
+%     Car.Battery.Capacity = 4.73;
+%     GR = GearRatios(i-S1);
+%     Car.Driveline.GearRatio = GR;
+%     
+%     Tele = Simulate(Car,Track);
+%     
+%     TimeAutoX = sum(cell2mat(Tele.Results(1)));
+%     Time75 = cell2mat(Tele.Results(4));
+%     MaxG = Car.Tire.MaxLateralAcceleration;
+%     TimeSkid = 2*pi*sqrt(9.1/(9.81*MaxG));
+%     
+%     AxleOutputCurve = Car.Motor.OutputCurve;
+%     
+%     for j = 1:S2
+%         
+%         RPM = RPMCutOffs(j);
+%         
+%         Car.Motor.OutputCurve(RPM+2:end,:) = [];
+%     
+%         [Energy, EndTime, TF ] = EnduranceSimulation(Car,Track,EnduranceLength,TF);
+%    
+%         RawResults(i,:,j) = [TimeAutoX,Time75,TimeSkid,EndTime,Energy,TF,RPM,GR];
+%     
+%         if TF > 1
+%             TF = 1;
+%         end
+%         
+%     end
+%     
+%     Car.Motor.OutputCurve = AxleOutputCurve;
+%     
+% end
 
 
 LapTime = RawResults(:,4)/EnduranceLaps;

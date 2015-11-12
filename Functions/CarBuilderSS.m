@@ -61,7 +61,6 @@ CrossArea = setupSheetData(83); % in^2
 rho = setupSheetData(84);
 cop = setupSheetData(85:87);
 
-
 % Driveline
 
 Efficiency = setupSheetData(65);
@@ -79,8 +78,6 @@ GearRatios = setupSheetData(58:62);
 % Remove unused ratios
 UnusedGearRatios = GearRatios == 0;
 GearRatios(UnusedGearRatios) = [];
-
-Driveline = CarDriveline(GearRatios,Efficiency,SprungMass,UnsprungMass,CG,J,FinalDriveRatio);
 
 switch tabName
     
@@ -155,6 +152,11 @@ switch tabName
         
         
 end
+
+
+% Must be run after motor is initialized because it requires the motor
+% output curve.
+Driveline = CarDriveline(GearRatios,Efficiency,SprungMass,UnsprungMass,CG,J,FinalDriveRatio,Motor.OutputCurve);
 
 % Car Parameters
 
