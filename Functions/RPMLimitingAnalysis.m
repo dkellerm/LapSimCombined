@@ -2,7 +2,7 @@ function [ RawResults,PointResults ] = RPMLimitingAnalysis( Car,Track )
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
-GearRatios = (2:0.5:6);
+GearRatios = (4:0.5:6);
 % GearRatios = 2;
 
 S1 = length(GearRatios);
@@ -18,20 +18,9 @@ EnduranceLength = 866142;
 
 EnduranceLaps = EnduranceLength/Track.Length;
 
-h = waitbar(0,'0%','Name','Calculating Round 1...',...
-            'CreateCancelBtn',...
-            'setappdata(gcbf,''canceling'',1)');
-setappdata(h,'canceling',0)
-
 TF = 1;
 
-for i = 1:S1
-    
-    if getappdata(h,'canceling')
-        delete(h)
-        return
-    end
-    
+for i = 1:S1    
     GR = GearRatios(i);
     Car.Driveline.GearRatio = GR;
     
@@ -57,34 +46,17 @@ for i = 1:S1
         if TF > 1;
             TF = 1;
         end
-        
-    end
-    
-    Car.Motor.OutputCurve = MotorCurve;
-    
-    waitbar(i/S1,h,sprintf('%4.2f%%',i/S1*100))
-    
+        Car.Motor.OutputCurve = MotorCurve;         
+    end   
 end
-
-delete(h)
 
 Car.Weight = Car.Weight - 38;
 Car.Battery.Capacity = 4.73;
 
-h = waitbar(0,'0%','Name','Calculating Round 2...',...
-            'CreateCancelBtn',...
-            'setappdata(gcbf,''canceling'',1)');
-setappdata(h,'canceling',0)
 
 TF = 1;
 
-for i = S1+1:S1*2
-    
-    if getappdata(h,'canceling')
-        delete(h)
-        return
-    end
-    
+for i = S1+1:S1*2    
     GR = GearRatios(i-S1);
     Car.Driveline.GearRatio = GR;
     
@@ -114,8 +86,6 @@ for i = S1+1:S1*2
     end
     
     Car.Motor.OutputCurve = MotorCurve;
-    
-    waitbar((i-S1)/S1,h,sprintf('%4.2f%%',(i-S1)/S1*100))
     
 end
 
