@@ -11,14 +11,11 @@ classdef CarDriveline < handle
         SprungMass
         UnsprungMass
         J
-        PrimaryGear
         FinalDriveRatio
-        DrivetrainType
-        OutputCurve % [AxleRPM, AxleTorque, MotorRPM, MotorTorque, MotorEfficiency]
-        Name = '';
+        OutputCurve % [AxleRPM, AxleTorque, MotorRPM, MotorTorque, MotorEfficiency, GearNumber]
     end
     methods
-        function D = CarDriveline(GearRatios,Efficiency,SprungM,UnsprungM,CG,J,FinalDriveRatio,DrivetrainType)
+        function D = CarDriveline(GearRatios,Efficiency,SprungM,UnsprungM,CG,J,FinalDriveRatio)
             D.GearRatios = GearRatios;
             D.Efficiency = Efficiency;
             D.Weight = SprungM + sum(UnsprungM);
@@ -27,14 +24,13 @@ classdef CarDriveline < handle
             D.UnsprungMass = UnsprungM;
             D.J = J;
             D.FinalDriveRatio = FinalDriveRatio;
-            D.DrivetrainType = DrivetrainType;               
         end
         
         function CalculateOutputCurve(D, MotorOutputCurve)
-            if length(D.GearRatios) > 1
+            if length(D.GearRatios) > 1 % Multiple Gears
                 D.ShiftPoints = zeros(length(D.GearRatios) - 1,1);
                 OutputCurves = zeros(length(D.GearRatios), length(MotorOutputCurve), 5);
-                
+
                 % Create Output Curves for each gear
                 for i=1:length(D.GearRatios)
                     OutputCurves(i,:,1) = MotorOutputCurve(:,1) / D.GearRatios(i);
@@ -43,21 +39,21 @@ classdef CarDriveline < handle
                     OutputCurves(i,:,4) = MotorOutputCurve(:,2);
                     OutputCurves(i,:,5) = MotorOutputCurve(:,3);
                 end
-                
+
                 % Find All Intersections of gear torque output curves.
                 possibleShiftPoints = cell(length(D.ShiftPoints),1);
                 for i=2:length(D.GearRatios)
                     possibleShiftPoints{i-1} = intersections(OutputCurves(i-1,:,1), OutputCurves(i-1,:,2), OutputCurves(i,:,1), OutputCurves(i,:,2), true);
                 end
-                
+
                 % Take the first intersection
                 D.ShiftPoints = cellfun(@(shiftPointsForGear)(round(min(shiftPointsForGear))), possibleShiftPoints);
-                
+
                 % Create the axle output curve. Uses 1 rpm increments.
-                maxAxleRPM = max(OutputCurves(:,end,1));
+                maxAxleRPM = round(max(OutputCurves(:,end,1)));
                 D.OutputCurve = zeros(maxAxleRPM + 1, 6);
                 D.OutputCurve(:,1) = 0:maxAxleRPM;
-                
+
                 for i=1:length(D.GearRatios)
                     if i == 1 % First Gear starts at 0
                         D.OutputCurve(1:D.ShiftPoints(i), 2) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,2), D.OutputCurve(1:D.ShiftPoints(i),1));
@@ -79,17 +75,28 @@ classdef CarDriveline < handle
                         D.OutputCurve(D.ShiftPoints(i-1):D.ShiftPoints(i), 6) = i;
                     end
                 end
-                
+
                 plot(OutputCurves(1,:,1), OutputCurves(1,:,2),...
                     OutputCurves(2,:,1), OutputCurves(2,:,2), ...
                     OutputCurves(3,:,1), OutputCurves(3,:,2), ...
                     OutputCurves(4,:,1), OutputCurves(4,:,2), ...
                     OutputCurves(5,:,1), OutputCurves(5,:,2), ...
                     D.OutputCurve(:,1), D.OutputCurve(:,2));
-            end
+            else % Single Gear
+                maxAxleRPM = round(max(MotorOutputCurve(:,1)));
+                D.OutputCurve = zeros(maxAxleRPM + 1, 6);
+                D.OutputCurve(:,1) = 0:maxAxleRPM;
                 
+                D.OutputCurve(:, 2) = interp1(MotorOutputCurve(:,1), MotorOutputCurve(:,2), D.OutputCurve(:,1));
+                D.OutputCurve(:, 3) = D.OutputCurve(:,1);
+                D.OutputCurve(:, 4) = D.OutputCurve(:,2);
+                D.OutputCurve(:, 5) = interp1(MotorOutputCurve(:,1), MotorOutputCurve(:,3), D.OutputCurve(:,1));
+                D.OutputCurve(:, 6) = 1;
+            end
+            
+            D.OutputCurve(:,1) = D.OutputCurve(:,1) / D.FinalDriveRatio;
+            D.OutputCurve(:,2) = D.OutputCurve(:,2) * D.FinalDriveRatio;
         end
-        
     end
 end
 
