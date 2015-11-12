@@ -56,7 +56,7 @@ classdef Car < handle
         
             NMotors = CarObject.Motor.NMotors;
 
-            RHO = 0.002329; %slugs/ft^3
+            RHO = CarObject.Rho; %slugs/ft^3
 
             RollingR = CarObject.Weight*CarObject.Tire.RollingResistance; % Rolling Resistance force for car configuration
 
@@ -259,8 +259,8 @@ classdef Car < handle
         function [deltaFz] = CalculateAeroEffects(CarObject, Velocity)
             %   Weight Transfer Equations from: Solve[{drag*(CoPz - CGz) + lift*-1*(CoPx - CGx) - Fy*frontAxleDistance + Ry*rearAxleDistance == 0, Fy + Ry - lift == 0}, {Fy, Ry}]
             
-            lift = (0.5*RHO*CarObject.LiftCoefficient*CarObject.FrontCrossSection*Velocity^2)/12^4; % lbf
-            drag = (0.5*RHO*CarObject.DragCoefficient*CarObject.FrontCrossSection*Velocity^2)/12^4; % lbf
+            lift = (0.5*CarObject.Rho*CarObject.LiftCoefficient*CarObject.FrontCrossSection*Velocity^2)/12^4; % lbf
+            drag = (0.5*CarObject.Rho*CarObject.DragCoefficient*CarObject.FrontCrossSection*Velocity^2)/12^4; % lbf
             
             frontAxleDistance = CarObject.CG(1);
             rearAxleDistance = CarObject.Chassis.Length - CarObject.CG(1);
