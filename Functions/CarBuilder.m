@@ -40,7 +40,7 @@ SprungMass = 0; % lb
 UnsprungMass = [ 0 0 ]; % Front Back (lb)
 J = 20; % slug in^2
 
-Driveline = CarDriveline(GearRatio,Efficiency,SprungMass,UnsprungMass,CG,J);
+Driveline = CarDriveline(GearRatio,Efficiency,SprungMass,UnsprungMass,CG,J, 1.0, 1.0, 1.0, 'Electric');
 
 % Motor Parameters
 
@@ -80,8 +80,13 @@ Tire = CarTire(TireModel,K,R,RollingResistance,W,CG,J);
 
 Drag = 0.6; 
 CrossArea = 2015; % in^2
+Lift = -0.01;
+Rho = 0.002329;
 
 C = Car(Brakes,Driveline,Motor,Chassis,Battery,Suspension,Tire,Drag,CrossArea);
+C.LiftCoefficient = Lift;
+C.Rho = Rho;
+C.CenterOfPressure = [34 0 10];
 
 end
 
