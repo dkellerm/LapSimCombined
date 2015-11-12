@@ -14,7 +14,7 @@ classdef CarDriveline < handle
         PrimaryGear
         FinalDriveRatio
         DrivetrainType
-        OutputCurve
+        OutputCurve % [AxleRPM, AxleTorque, MotorRPM, MotorTorque, MotorEfficiency]
         Name = '';
     end
     methods
@@ -29,17 +29,6 @@ classdef CarDriveline < handle
             D.FinalDriveRatio = FinalDriveRatio;
             D.DrivetrainType = DrivetrainType;               
         end
-        function [MotorRPM,Efficiency] = DriveTransfer(D,RoadSpeed,TireRadius)
-            switch D.DrivetrainType
-                case 'Electric'
-                    Efficiency = D.Efficiency;
-                    MotorRPM = RoadSpeed/TireRadius*D.GearRatio;
-                    
-                case 'Combustion'
-                    Efficiency = D.Efficiency;
-                    MotorRPM = RoadSpeed/TireRadius*D.GearRatio;
-            end
-        end
         
         function CalculateOutputCurve(D, MotorOutputCurve)
             if length(D.GearRatios) > 1
@@ -50,7 +39,9 @@ classdef CarDriveline < handle
                 for i=1:length(D.GearRatios)
                     OutputCurves(i,:,1) = MotorOutputCurve(:,1) / D.GearRatios(i);
                     OutputCurves(i,:,2) = MotorOutputCurve(:,2) * D.GearRatios(i);
-                    OutputCurves(i,:,3) = MotorOutputCurve(:,3);
+                    OutputCurves(i,:,3) = MotorOutputCurve(:,1);
+                    OutputCurves(i,:,4) = MotorOutputCurve(:,2);
+                    OutputCurves(i,:,5) = MotorOutputCurve(:,3);
                 end
                 
                 % Find All Intersections of gear torque output curves.
@@ -68,15 +59,21 @@ classdef CarDriveline < handle
                 D.OutputCurve(:,1) = 0:maxAxleRPM;
                 
                 for i=1:length(D.GearRatios)
-                    if i == 1
+                    if i == 1 % First Gear starts at 0
                         D.OutputCurve(1:D.ShiftPoints(i), 2) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,2), D.OutputCurve(1:D.ShiftPoints(i),1));
                         D.OutputCurve(1:D.ShiftPoints(i), 3) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,3), D.OutputCurve(1:D.ShiftPoints(i),1));
-                    elseif i==length(D.GearRatios)
+                        D.OutputCurve(1:D.ShiftPoints(i), 4) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,4), D.OutputCurve(1:D.ShiftPoints(i),1));
+                        D.OutputCurve(1:D.ShiftPoints(i), 5) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,5), D.OutputCurve(1:D.ShiftPoints(i),1));
+                    elseif i==length(D.GearRatios) % Final gear goes until end of matrix.
                         D.OutputCurve(D.ShiftPoints(i-1):end, 2) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,2), D.OutputCurve(D.ShiftPoints(i-1):end, 1));
                         D.OutputCurve(D.ShiftPoints(i-1):end, 3) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,3), D.OutputCurve(D.ShiftPoints(i-1):end, 1));
-                    else
+                        D.OutputCurve(D.ShiftPoints(i-1):end, 4) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,4), D.OutputCurve(D.ShiftPoints(i-1):end, 1));
+                        D.OutputCurve(D.ShiftPoints(i-1):end, 5) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,5), D.OutputCurve(D.ShiftPoints(i-1):end, 1));
+                    else % Intermediate gear fills space between two shift points
                         D.OutputCurve(D.ShiftPoints(i-1):D.ShiftPoints(i), 2) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,2), D.OutputCurve(D.ShiftPoints(i-1):D.ShiftPoints(i),1));
                         D.OutputCurve(D.ShiftPoints(i-1):D.ShiftPoints(i), 3) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,3), D.OutputCurve(D.ShiftPoints(i-1):D.ShiftPoints(i),1));
+                        D.OutputCurve(D.ShiftPoints(i-1):D.ShiftPoints(i), 4) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,4), D.OutputCurve(D.ShiftPoints(i-1):D.ShiftPoints(i),1));
+                        D.OutputCurve(D.ShiftPoints(i-1):D.ShiftPoints(i), 5) = interp1(OutputCurves(i,:,1), OutputCurves(i,:,5), D.OutputCurve(D.ShiftPoints(i-1):D.ShiftPoints(i),1));
                     end
                 end
                 

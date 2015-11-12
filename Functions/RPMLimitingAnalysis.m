@@ -2,12 +2,12 @@ function [ RawResults,PointResults ] = RPMLimitingAnalysis( Car,Track )
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
-GearRatios = (3:0.5:6);
+GearRatios = (4:0.25:5);
 % GearRatios = 2;
 
 S1 = length(GearRatios);
 
-RPMCutOffs = (3500:-200:1900);
+RPMCutOffs = (3500:-200:2300);
 % RPMCutOffs = 3500;
 
 S2 = length(RPMCutOffs);
