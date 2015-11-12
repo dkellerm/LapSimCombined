@@ -116,7 +116,7 @@ classdef Car < handle
             RollingR = CarObject.Weight*CarObject.Tire.RollingResistance; % Rolling Resistance force for car configuration
 
             % Assume brakes use tire at full potential
-            ForwardGs = interp1(CarObject.Tire.BrakingAccelerationMap.velocities, CarObject.Tire.BrakeAccelerationMap.accelerations, Velocity, 'spline');
+            ForwardGs = interp1(CarObject.Tire.BrakingAccelerationMap.velocities, CarObject.Tire.BrakingAccelerationMap.accelerations, Velocity, 'spline');
             
             % Calculate wheel force based on tire capability. Includes drag
             % strangely.
@@ -135,7 +135,7 @@ classdef Car < handle
             
             % Tractive limit is reached at all of the indexes that were
             % previously adjusted to match tire acceleration
-            TractiveLimit = I;
+            TractiveLimit = ones(length(ForwardGs),1);
                         %    1       2     3        4       5           6           7
             LookUpTable = [Velocity,Drag,AxleRPM,MotorRPM,BrakeTorque,ForwardGs,LateralGs,TractiveLimit];
 
@@ -147,7 +147,7 @@ classdef Car < handle
             RollingR = CarObject.Weight*CarObject.Tire.RollingResistance; % Rolling Resistance force for car configuration
             
             % Pulls max lateral Gs available from map.
-            MaxLatG = interp1(CarObject.Tire.LateralAccelerationMap.velocities, CarObject.Tire.LateralAccelerationMap.accelerations, Velocity, 'linear');
+            MaxLatG = interp1(CarObject.Tire.LateralAccelerationMap.radii, CarObject.Tire.LateralAccelerationMap.accelerations, R, 'linear');
             
             % Finds lateral Gs for each velocity in the given array
             LateralGs = (Velocity.^2/R)/(32.174*12);
@@ -212,7 +212,7 @@ classdef Car < handle
             RollingR = CarObject.Weight*CarObject.Tire.RollingResistance; % Rolling Resistance force for car configuration
             
             % Pull max lateral Gs from tire model
-            MaxLatA = interp1(CarObject.Tire.LateralAccelerationMap.velocities, CarObject.Tire.LateralAccelerationMap.accelerations, Velocity, 'linear');
+            MaxLatA = interp1(CarObject.Tire.LateralAccelerationMap.radii, CarObject.Tire.LateralAccelerationMap.accelerations, R, 'linear');
             
             % Calculate lateral Gs for each velocity in given array
             LateralGs = (Velocity.^2/R)/(32.174*12);
@@ -257,24 +257,27 @@ classdef Car < handle
         end
         
         function [deltaFz] = CalculateAeroEffects(CarObject, Velocity)
-            %   Weight Transfer Equations from: Solve[{drag*(CoPz - CGz) + lift*-1*(CoPx - CGx) - Fy*frontAxleDistance + Ry*rearAxleDistance == 0, Fy + Ry - lift == 0}, {Fy, Ry}]
+            %   Load Distribution Equations from: Solve[{Fz + Rz + Lift == 0, -Fz*frontAxleDistance + Rz*rearAxleDistance - drag*(CoPz - CGz) + lift*(CoPx - CGx) == 0}, {Fz, Rz}]
             
-            lift = (0.5*CarObject.Rho*CarObject.LiftCoefficient*CarObject.FrontCrossSection*Velocity^2)/12^4; % lbf
-            drag = (0.5*CarObject.Rho*CarObject.DragCoefficient*CarObject.FrontCrossSection*Velocity^2)/12^4; % lbf
+            lift = (0.5*CarObject.Rho*CarObject.LiftCoefficient*CarObject.FrontCrossSection*Velocity.^2)/12^4; % lbf
+            drag = (0.5*CarObject.Rho*CarObject.DragCoefficient*CarObject.FrontCrossSection*Velocity.^2)/12^4; % lbf
             
             frontAxleDistance = CarObject.CG(1);
             rearAxleDistance = CarObject.Chassis.Length - CarObject.CG(1);
             
-            Fy_diff = -1 * ((CarObject.CG(3) - CarObject.CenterOfPressure(3)) * drag + (CarObject.CenterOfPressure(1) - CarObject.CG(1)) * lift - lift * rearAxleDistance)...
-                / CarObject.Chassis.Length;
-            Ry_diff = -1 * ((CarObject.CG(3) + CarObject.CenterOfPressure(3)) * drag + (CarObject.CetnerOfPressure(1) - CarObject.CG(1)) * lift - lift * frontAxleDistance)...
-                / CarObject.Chassis.Length;
+            CGx = CarObject.CG(1);
+            CGz = CarObject.CG(3);
+            CoPx = CarObject.CenterOfPressure(1);
+            CoPz = CarObject.CenterOfPressure(3);
             
-            deltaFz = zeros(4);
-            deltaFz(1) = Fy_diff;
-            deltaFz(2) = Fy_diff;
-            deltaFz(3) = Ry_diff;
-            deltaFz(4) = Ry_diff;
+            Fy_diff = -1 * ((-1*CGz*drag + CoPz*drag + CGx*lift - CoPx*lift + lift*rearAxleDistance)/(frontAxleDistance + rearAxleDistance));
+            Ry_diff = -1 * ((CGz*drag - CoPz*drag - CGx*lift + CoPx*lift + frontAxleDistance*lift)/(frontAxleDistance + rearAxleDistance));
+            
+            deltaFz = zeros(length(Velocity), 4);
+            deltaFz(:, 1) = Fy_diff / 2;
+            deltaFz(:, 2) = Fy_diff / 2;
+            deltaFz(:, 3) = Ry_diff / 2;
+            deltaFz(:, 4) = Ry_diff / 2;
         end
             
     end

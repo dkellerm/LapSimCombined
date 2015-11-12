@@ -7,7 +7,7 @@
 clear all
 clc
 
-winopen('SetupSheets.xlsx'); %Make sure to save excel before running, you can leave it open
+%winopen('SetupSheets.xlsx'); %Make sure to save excel before running, you can leave it open
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%%%%%%%%%
 %%%%%%%%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%%%%%%%%%
@@ -19,10 +19,10 @@ winopen('SetupSheets.xlsx'); %Make sure to save excel before running, you can le
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Car = CarBuilder();
-tabName = input(' Combustion or Electric? ','s');
+%tabName = input(' Combustion or Electric? ','s');
 rowNumber = 6;
 
-Car = CarBuilderSS(tabName, rowNumber);
+Car = CarBuilderSS('Electric', rowNumber);
 Track = FSG2013;
 
 % [ RawResults,PointResults ] = RPMLimitingAnalysis( Car,Track );

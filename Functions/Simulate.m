@@ -30,7 +30,7 @@ function [ Tele ] = Simulate( CarObject,TrackObject )
 dx = 1;
 
 CarObject.Tire.CalculateLateralGMap(CarObject, TrackObject);
-CarObject.Tire.CalculateLongitudinalGMap(CarObject, TrackObject);
+CarObject.Tire.CalculateLongitudinalGMap(CarObject);
 
 LookUpTable1 = CarObject.StraightAccTableGenerator();
 

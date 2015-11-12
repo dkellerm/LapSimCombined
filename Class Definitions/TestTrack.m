@@ -63,14 +63,14 @@ classdef TestTrack < handle
             end
             
             % Initialize Corner Radius Array
-            sectionIsCorner = arrayfun(@(section)(section.Radius ~= 0), TT.Sections);
+            sectionIsCorner = arrayfun(@(section)(section.Radius ~= 0), TT.Track);
             numCorners = sum(sectionIsCorner);
-            TT.CornerRadii = zeros(numCorners);
+            TT.CornerRadii = zeros(numCorners,1);
             
             cornerIndex = 1;
             for sectionIndex = 1:TT.Sections
-                if TT.Sections(sectionIndex).Radius ~= 0
-                    TT.CornerRadii(cornerIndex) = TT.Sections(sectionIndex).Radius;
+                if TT.Track(sectionIndex).Radius ~= 0
+                    TT.CornerRadii(cornerIndex) = TT.Track(sectionIndex).Radius;
                     cornerIndex = cornerIndex + 1;
                 end
             end

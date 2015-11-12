@@ -81,9 +81,10 @@ classdef CarTire < handle
         
         function CalculateLateralGMap(T,CarObject,TrackObject)
             TrackCornerRadii = TrackObject.TrackCornerRadii();
+            TrackCornerRadii = unique(TrackCornerRadii);
             
             % Balance Car at closest to average corner
-            averageCornerRadius = avg(TrackCornerRadii);
+            averageCornerRadius = mean(TrackCornerRadii);
             [~, closestToAverageCornerRadiusIndex] = min(abs(TrackCornerRadii-averageCornerRadius));
             LateralGCalculator(T, CarObject, 'Balance', TrackCornerRadii(closestToAverageCornerRadiusIndex));
             
@@ -91,6 +92,7 @@ classdef CarTire < handle
             T.LateralAccelerationMap = struct('accelerations', arrayfun(@(radius)(LateralGCalculator(T,CarObject,'',radius)), TrackCornerRadii),...
                                               'radii', TrackCornerRadii);
             T.MaxLateralAcceleration = max(T.LateralAccelerationMap.accelerations);
+            plot(T.LateralAccelerationMap.radii, T.LateralAccelerationMap.accelerations);
         end
         
         function lateralG = LateralGCalculator(T,CarObject,Balance,Radius)
@@ -121,16 +123,16 @@ classdef CarTire < handle
             Kr_initial = Kr;
             
             Gs = (0:0.01:2)';
+            Velocity = sqrt(Gs * 32.2 * Radius/12);
+            Fz_aero_delta = CarObject.CalculateAeroEffects(Velocity);
             
             UnbalanceFlag = 1;
             
             while true
             
                 Fz = LateralWeightTransfer( Gs,Ws,Wfus,Wrus,FR,Tf,Tr,Kf,Kr,hCG,hfus,hrus,hfrc,hrrc );
-
-                Velocity = sqrt(Gs * 32.2 * Radius);
                 
-                Fz = Fz + CarObject.CalculateAeroEffects(Velocity);
+                Fz = Fz + Fz_aero_delta;
                 
                 [Fy,SA] = T.TireModel(Fz,'Lateral');
 
@@ -239,8 +241,12 @@ classdef CarTire < handle
             Gs = (0:0.01:2)';
             
             Fz = LongitudinalWeightTransfer( Kf, Kr, Kt, Gs, Ws, Wfus, Wrus, hCG, PC, FR, L );
+            Fz_aero_deltas = CarObject.CalculateAeroEffects(Velocity);
             
-            Fz = Fz + CarObject.CalculateAeroEffects(Velocity);
+            Fz(:,1) = Fz(:,1) + Fz_aero_deltas(1);
+            Fz(:,2) = Fz(:,2) + Fz_aero_deltas(2);
+            Fz(:,3) = Fz(:,3) + Fz_aero_deltas(3);
+            Fz(:,4) = Fz(:,4) + Fz_aero_deltas(4);
 
             [Fx, SR] = T.TireModel(Fz,'Longitudinal');
 
