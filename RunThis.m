@@ -7,7 +7,7 @@
 % clear all
 % clc
 
-%winopen('SetupSheets.xlsx'); %Make sure to save excel before running, you can leave it open
+% winopen('SetupSheets.xlsx'); %Make sure to save excel before running, you can leave it open
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%%%%%%%%%
 %%%%%%%%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%%%%%%%%%
@@ -23,11 +23,16 @@
 rowNumber = 6;
 
 Car = @()(CarBuilderSS('Combustion', rowNumber));
-Track = @FSAELincoln2013;
+Track = @FSG2013;
+% Track = @FSAEMichigan2015;
 
 car = Car();
 track = Track();
 
 % [ RawResults,PointResults ] = RPMLimitingAnalysis( Car,Track );
-Simulate( car, track )
+% Simulate( car, track )
 % save('BatteryandRPMLimitingAnalysis')
+
+Showmewhatyougot = ExcelSweep(Track,6,15,'Combustion');
+
+
