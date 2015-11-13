@@ -22,12 +22,12 @@
 %tabName = input(' Combustion or Electric? ','s');
 rowNumber = 6;
 
-Car = @()(CarBuilderSS('Combustion', rowNumber));
+% Car = @()(CarBuilderSS('Combustion', rowNumber));
 Track = @FSG2013;
 % Track = @FSAEMichigan2015;
 
-car = Car();
-track = Track();
+% car = Car();
+% track = Track();
 
 % [ RawResults,PointResults ] = RPMLimitingAnalysis( Car,Track );
 % Simulate( car, track )
