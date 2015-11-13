@@ -370,13 +370,15 @@ classdef Telemetry < handle
             end
             disp(['75m Run Score        : ', num2str(AccScore)])
             
-            Tmin = 46.944;
+            Tmin = 95;
             Tmax = 1.45*Tmin;
-            AutoXScore = 95.5*(Tmax/TotalTime - 1)/(Tmax/Tmin - 1) + 4.5;
-            if AutoXScore > 100
-                AutoXScore = 100;
-            elseif AutoXScore < 0
-                AutoXScore = 0;
+            PerformancePoints = 142.5*(Tmax/TotalTime - 1)/(Tmax/Tmin - 1);
+            if PerformancePoints < 0
+                PerformancePoints = 0;
+            end
+            AutoXScore = PerformancePoints + 7.5;
+            if AutoXScore > 150
+                AutoXScore = 150;
             end
             disp(['AutoCross Score      : ', num2str(AutoXScore)])
             
