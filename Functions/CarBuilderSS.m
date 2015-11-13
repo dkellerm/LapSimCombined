@@ -84,10 +84,10 @@ switch tabName
     case 'Electric'
         % Electric Motor Parameters
         
-        PeakTorque = 1637.39; % in-lb
+        PeakTorque = 2124.18; % in-lb
         Efficiency = 0.95;
-        RPMLimit = 3500;
-        RPMTaper = 3000;
+        RPMLimit = 5000;
+        RPMTaper = 4000;
         
         RPMS = (0:1:RPMLimit)';
         T = ones(RPMTaper + 1, 1) * 1637.39 * Tmult; % in lbf
