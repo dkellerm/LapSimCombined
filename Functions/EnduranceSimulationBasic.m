@@ -32,5 +32,12 @@ while true
     end
     
     TF = TF - TFDecrement;
+    
+    if TF < .1
+        Energy = inf;
+        Time = inf;
+        TF = 0;
+        break;
+    end
 end
 

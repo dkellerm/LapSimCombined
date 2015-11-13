@@ -16,7 +16,7 @@ EnduranceLength = 866142; %22km in inches
 
 EnduranceLaps = EnduranceLength/Track.Length;
 
-for i = 1:S1
+parfor i = 1:S1
     Car = CarFcn();
     Track = TrackFcn();
     

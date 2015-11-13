@@ -130,20 +130,21 @@ classdef CarDriveline < handle
                 D.CurrentTF = 1;
             end
             
+            TF
+            
             D.OutputCurve(:,2) = D.OutputCurve(:,2) * TF / D.CurrentTF;
             D.OutputCurve(:,4) = D.OutputCurve(:,4) * TF / D.CurrentTF;
             D.CurrentTF = TF;
         end
         
         function SetRPMLimit(D, RPMLimit)
+            TF = 1;
+            
             if ~isnan(D.CurrentTF)
                 TF = D.CurrentTF;
-            else
-                TF = 1;
             end
             
             D.ResetTorqueCurve();
-            
             D.CurrentRPMLimit = RPMLimit;
             D.OutputCurve(RPMLimit+2:end,:) = [];
             D.SetTorqueFactor(TF);
