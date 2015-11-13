@@ -57,6 +57,12 @@ classdef CarDriveline < handle
                     % Remove any intersections at 0
                     zeroIntersections = possibleShiftPoints{i-1} == 0;
                     possibleShiftPoints{i-1}(zeroIntersections) = [];
+                    
+                    % If it doesn't have any intersections, shift at
+                    % redline
+                    if isempty(possibleShiftPoints{i-1})
+                        possibleShiftPoints{i-1} = OutputCurves(i-1,end,1);
+                    end
                 end
 
                 % Take the first intersection
