@@ -33,6 +33,6 @@ track = Track();
 % Simulate( car, track )
 % save('BatteryandRPMLimitingAnalysis')
 
-Showmewhatyougot = ExcelSweep(Track,6,15,'Combustion');
+[Showmewhatyougot, RawResults] = ExcelSweep(Track,6,15,'Combustion');
 
 
