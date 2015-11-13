@@ -31,7 +31,7 @@ parfor i = 1:S1
     TimeSkid = 2*pi*sqrt(9.1/(9.81*MaxG));
     
     for j = 1:S2
-        RPM = round(RPMCutOffs(j) / GR);
+        RPM = round(RPMCutOffs(j) / GR)	;
         
         Car.Driveline.SetRPMLimit(RPM);
         

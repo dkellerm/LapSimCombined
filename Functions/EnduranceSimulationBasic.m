@@ -27,7 +27,7 @@ while true
     
     Error = Car.Battery.Capacity - Energy;
     
-    if abs(Error) < Car.Battery.Capacity/50
+    if Error > Car.Battery.Capacity/50
         break;
     end
     
