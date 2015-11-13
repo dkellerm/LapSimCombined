@@ -117,8 +117,6 @@ classdef CarDriveline < handle
             if ~isnan(D.CurrentTF)
                 D.SetTorqueFactor(D.CurrentTF);
             end
-            
-            plot(D.OutputCurve(:,1), D.OutputCurve(:,2));
         end
         
         function ResetTorqueCurve(D)
@@ -128,13 +126,22 @@ classdef CarDriveline < handle
         end
         
         function SetTorqueFactor(D, TF)
+            if isnan(D.CurrentTF)
+                D.CurrentTF = 1;
+            end
+            
             D.OutputCurve(:,2) = D.OutputCurve(:,2) * TF / D.CurrentTF;
             D.OutputCurve(:,4) = D.OutputCurve(:,4) * TF / D.CurrentTF;
             D.CurrentTF = TF;
         end
         
         function SetRPMLimit(D, RPMLimit)
-            TF = D.CurrentTF;
+            if ~isnan(D.CurrentTF)
+                TF = D.CurrentTF;
+            else
+                TF = 1;
+            end
+            
             D.ResetTorqueCurve();
             
             D.CurrentRPMLimit = RPMLimit;
