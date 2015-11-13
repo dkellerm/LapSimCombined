@@ -3,12 +3,11 @@ function [ RawResults,PointResults ] = RPMLimitingAnalysis(CarFcn, TrackFcn)
 %   Detailed explanation goes here
 
 Track = TrackFcn();
-GearRatios = (4:0.25:5);
-% GearRatios = 2;
 
+GearRatios = (3:0.5:5);
 S1 = length(GearRatios);
 
-RPMCutOffs = (3500:-200:2300);
+RPMCutOffs = (5000:-500:1500);
 S2 = length(RPMCutOffs);
 
 RawResults = zeros(S1*2,8,S2);
@@ -20,11 +19,9 @@ EnduranceLaps = EnduranceLength/Track.Length;
 for i = 1:S1
     Car = CarFcn();
     Track = TrackFcn();
-    TF = 1;
     
     GR = GearRatios(i);
     Car.Driveline.SetGearRatios(GR, Car.Motor.OutputCurve);
-    
     
     Tele = Simulate(Car,Track);
     
@@ -38,13 +35,9 @@ for i = 1:S1
         
         Car.Driveline.SetRPMLimit(RPM);
         
-        [Energy, EndTime, TF ] = EnduranceSimulation(Car,Track,EnduranceLength,TF);
+        [Energy, EndTime, TF ] = EnduranceSimulationBasic(Car,Track,EnduranceLength);
 
-        RawResults(i,:,j) = [TimeAutoX,Time75,TimeSkid,EndTime,Energy,TF,RPM,GR];
-
-        if TF > 1;
-            TF = 1;
-        end        
+        RawResults(i,:,j) = [TimeAutoX,Time75,TimeSkid,EndTime,Energy,TF,RPM,GR];      
     end   
 end
 
@@ -95,23 +88,22 @@ EFArray = (min(LapTime)./LapTime).*(min(LapEnergy)./LapEnergy).^2;
 
 PointResults = zeros(S1*2,6);
 
-MinTimes = [77.664,3.506,4.901,1367.38,1367.38/EnduranceLaps];
+CompMinTimes = [3.950,51.569,4.827,1820.652,1820.652/ceil(EnduranceLaps)];
+OurMinTimes = [min(RawResults(:,1:4)),min(LapTime)];
+OverallMinTimes = min(CompMinTimes, OurMinTimes);
+
 
 for i = 1:S1*2
-    
     for j = 1:S2
-    
-        PointResults(i,:,j) = PointCalculator([min(RawResults(:,1:4)),min(LapTime)],min(LapEnergy),min(EFArray),[RawResults(i,1:4),LapTime(i)],LapEnergy(i));
-        %PointResults(i,:,j) = PointCalculator(MinTimes,0.216,0.22,[RawResults(i,1:4),LapTime(i)],LapEnergy(i));
-        
+        PointResults(i,:,j) = PointCalculator(OverallMinTimes,min(LapEnergy),min(EFArray),[RawResults(i,1:4),LapTime(i)],LapEnergy(i));
     end
 
 end
 
-% scatter3(GearRatios,RPMCutoffs,PointResults(1:S1,end,:),'ro')
-% hold on
-% scatter3(GearRatios,RPMCutoffs,PointResults(S1+1:2*S1,end,:),'bo')
-% grid on
+scatter3(GearRatios,RPMCutoffs,PointResults(1:S1,end,:),'ro')
+hold on
+scatter3(GearRatios,RPMCutoffs,PointResults(S1+1:2*S1,end,:),'bo')
+grid on
 
 end
 
