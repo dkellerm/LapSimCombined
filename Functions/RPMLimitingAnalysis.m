@@ -5,18 +5,18 @@ function [ RawResults] = RPMLimitingAnalysis(CarFcn, TrackFcn)
 Track = TrackFcn();
 
 GearRatios = (3:1:7);
-S1 = length(GearRatios);
+GearRatioLength = length(GearRatios);
 
 RPMCutOffs = (5000:-500:1500);
-S2 = length(RPMCutOffs);
+RPMCutOffLength = length(RPMCutOffs);
 
-RawResults = zeros(S1*2,8,S2);
+RawResults = zeros(8,GearRatioLength,RPMCutOffLength);
 
 EnduranceLength = 866142; % 22km in inches
 
 EnduranceLaps = EnduranceLength/Track.Length;
 
-parfor i = 1:S1
+parfor i = 1:GearRatioLength
     Car = CarFcn();
     Track = TrackFcn();
     
@@ -30,14 +30,16 @@ parfor i = 1:S1
     MaxG = Car.Tire.MaxLateralAcceleration;
     TimeSkid = 2*pi*sqrt(9.1/(9.81*MaxG));
     
-    for j = 1:S2
-        RPM = round(RPMCutOffs(j) / GR)	;
+    for j = 1:RPMCutOffLength
+        RPM = round(RPMCutOffs(j) / GR);
         
         Car.Driveline.SetRPMLimit(RPM);
         
         [Energy, EndTime, TF ] = EnduranceSimulationBasic(Car,Track,EnduranceLength);
+        
+        MotorRPMLimit = RPM * GR;
 
-        RawResults(i,:,j) = [TimeAutoX,Time75,TimeSkid,EndTime,Energy,TF,RPM,GR];      
+        RawResults(:,i,j) = [TimeAutoX,Time75,TimeSkid,EndTime,Energy,TF,MotorRPMLimit,GR];    
     end   
 end
 
