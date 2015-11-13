@@ -372,7 +372,7 @@ classdef Telemetry < handle
             
             Tmin = 46.944;
             Tmax = 1.45*Tmin;
-            AutoXScore = 95.5*(Tmax/TotalTime - 1)/(Tmax/Tmin - 1) + 4.5;
+            AutoXScore = (95.5*(Tmax/TotalTime - 1))/((Tmax/Tmin) - 1) + 4.5;
             if AutoXScore > 100
                 AutoXScore = 100;
             elseif AutoXScore < 0

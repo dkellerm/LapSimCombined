@@ -113,7 +113,7 @@ switch tabName
         
 %         t_shift = setupSheetData(93); % shift time (s). Only 3 decimals. Value from 4/19/14 test data.
 %         redline = setupSheetData(94);    % Not used at the moment
-        engine = 'Delft';
+        engine = 'CalPolySLO';
         RPMS_raw = xlsread('torquecurves.xlsx',engine,'C:C');
         T_raw = xlsread('torquecurves.xlsx',engine,'E:E'); %in-lbf
         RPMS = (min(RPMS_raw):max(RPMS_raw))';
