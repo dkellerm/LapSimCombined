@@ -54,17 +54,4 @@ track = Track();
 %Cd = 0.45, Cl = -.89
 
 WB = Results(:,6);
-TrackF = Results(:,7);
-timed = Results(:,1);
-
-X = reshape(WB,3,3)';
-Y = reshape(TrackF,3,3)';
-Z = reshape(timed,3,3)';
-
-surf(X,Y,Z)
-xlabel('WheelBase [in]')
-ylabel('Track [in]')
-zlabel('Lap Time [s]')
-
-
-
+TrackF = 

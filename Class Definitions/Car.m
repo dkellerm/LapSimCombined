@@ -20,12 +20,11 @@ classdef Car < handle
         SprungMass
         UnsprungMass
         Keq
-        WF
         Name = '';
     end
     
     methods
-        function C = Car(Brakes,Driveline,Motor,Chassis,Battery,Suspension,Tire,DragC,XArea,WF)
+        function C = Car(Brakes,Driveline,Motor,Chassis,Battery,Suspension,Tire,DragC,XArea)
             C.Brakes = Brakes;
             C.Driveline = Driveline;
             C.Motor = Motor;
@@ -35,7 +34,6 @@ classdef Car < handle
             C.Tire = Tire;
             C.DragCoefficient = DragC;
             C.FrontCrossSection = XArea;
-            C.WF = WF;
             
             C.UnsprungMass = Brakes.UnsprungMass + Driveline.UnsprungMass + Suspension.UnsprungMass + Tire.Weight/2;
             C.SprungMass = Battery.Weight + Brakes.SprungMass + Chassis.TotalWeight + Driveline.SprungMass + Motor.Weight + Suspension.SprungMass;

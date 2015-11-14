@@ -17,14 +17,13 @@ classdef CarChassis < handle
     end
     
     methods
-        function C = CarChassis(CWeight,CCG,DWeight,DCG,Track,Length,WF)
+        function C = CarChassis(CWeight,CCG,DWeight,DCG,Track,Length)
             C.ChassisWeight = CWeight;
             C.ChassisCG = CCG;
             C.DriverWeight = DWeight;
             C.DriverCG = DCG;
             C.Track = Track;
             C.Length = Length;
-            C.WF = WF;
             
             C.TotalWeight = CWeight + DWeight;
             C.EffectiveCG = (CWeight.*CCG + DWeight.*DCG)/C.TotalWeight;

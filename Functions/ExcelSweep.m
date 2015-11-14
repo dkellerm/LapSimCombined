@@ -26,7 +26,9 @@ function [Results, RawResults] = ExcelSweep(TrackFcn, StartRow, EndRow, TabName)
 		EnduranceEnergy = sum(EnduranceLapPowers.*EnduranceLapTimes)/3600;
 		
 		% Fill in any car parameters that should be saved in place of the 0's below.
-		Results(i, :) = [TimeAutoX,Time75,TimeSkid,TimeEnd,EnduranceEnergy,Car.Chassis.Length,Car.Chassis.WF,0]; 
+		Results(i, :) = [TimeAutoX,Time75,TimeSkid,TimeEnd,EnduranceEnergy,Car.Chassis.Length,Car.Chassis.Track(:,1),Car.Chassis.Track(:,2)]; 
 		RawResults{i} = Tele;
-	end
+        
+    end
+
 end

@@ -2,9 +2,9 @@ function [ C ] = CarBuilderSS(tabName, rowNumber)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
-range = excelRange(excelCell(rowNumber, 'A'), excelCell(rowNumber, 'CQ'));
+range = excelRange(excelCell(rowNumber, 'B'), excelCell(rowNumber, 'CQ'));
 setupSheetData = zeros(1,95);
-setupSheetData(1:95) = xlsread('SetupSheets.xlsx', tabName, range, 'basic');
+setupSheetData(2:95) = xlsread('SetupSheets.xlsx', tabName, range, 'basic');
 
 CG = setupSheetData(18:20); % x y z (in) 'R6:T6'
 
@@ -16,10 +16,10 @@ ChassisCG = setupSheetData(18:20); % x y z (in)
 DriverWeight = setupSheetData(21); % lb
 DriverCG = setupSheetData(22:24); % x y z (in)
 ChassisWeight = setupSheetData(25); % lb
-WF = setupSheetData(1); % Weight Distribution
+% WF = setupSheetData(1); % Weight Distribution
 
 Chassis = CarChassis(ChassisWeight,ChassisCG,DriverWeight,DriverCG,...
-    TrackWidth,WheelBase,WF);
+    TrackWidth,WheelBase);
 
 % Suspension Parameters
 
@@ -162,7 +162,7 @@ Driveline = CarDriveline(GearRatios,Efficiency,SprungMass,UnsprungMass,CG,J,Fina
 % Car Parameters
 
 
-C = Car(Brakes,Driveline,Motor,Chassis,Battery,Suspension,Tire,Drag,CrossArea,WF);
+C = Car(Brakes,Driveline,Motor,Chassis,Battery,Suspension,Tire,Drag,CrossArea);
 C.LiftCoefficient = Lift;
 C.Rho = rho;
 C.CenterOfPressure = cop;
