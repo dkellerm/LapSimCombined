@@ -1,4 +1,4 @@
-function [ Energy, Time, TF ] = EnduranceSimulationBasic( Car,Track,EnduranceLength)
+function [ Energy, Time, TF, Tele ] = EnduranceSimulationBasic( Car,Track,EnduranceLength)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 

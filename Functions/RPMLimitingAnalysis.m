@@ -1,46 +1,64 @@
-function [ RawResults] = RPMLimitingAnalysis(CarFcn, TrackFcn)
+function [ RawResults, Results ] = RPMLimitingAnalysis(CarFcn, TrackFcn)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
-Track = TrackFcn();
+% Track = TrackFcn();
 
-GearRatios = (3:1:7);
+WeightDistribution = .3:.05:.5;
+WeightDistributionLength = length(WeightDistribution);
+
+GearRatios = (6:-.25:2);
 GearRatioLength = length(GearRatios);
 
-RPMCutOffs = (5000:-500:1500);
+RPMCutOffs = (5000:-500:2000);
 RPMCutOffLength = length(RPMCutOffs);
 
-RawResults = zeros(8,GearRatioLength,RPMCutOffLength);
+Results = zeros(9,WeightDistributionLength);
+RawResults = cell(WeightDistributionLength, GearRatioLength, RPMCutOffLength);
+
 
 EnduranceLength = 866142; % 22km in inches
+% EnduranceLaps = EnduranceLength/Track.Length;
 
-EnduranceLaps = EnduranceLength/Track.Length;
+for i = 1:WeightDistributionLength
+    BestResult = [];
+    
+    for j = 1:GearRatioLength
+        Car = CarFcn();
+        Track = TrackFcn();
+        
+        Car.CG = [(Car.Chassis.Length * (1-WeightDistribution(i))) Car.CG(2) Car.CG(3)];
+        GR = GearRatios(j);
+        Car.Driveline.SetGearRatios(GR, Car.Motor.OutputCurve);
 
-parfor i = 1:GearRatioLength
-    Car = CarFcn();
-    Track = TrackFcn();
-    
-    GR = GearRatios(i);
-    Car.Driveline.SetGearRatios(GR, Car.Motor.OutputCurve);
-    
-    Tele = Simulate(Car,Track);
-    
-    TimeAutoX = sum(cell2mat(Tele.Results(1)));
-    Time75 = cell2mat(Tele.Results(4));
-    MaxG = Car.Tire.MaxLateralAcceleration;
-    TimeSkid = 2*pi*sqrt(9.1/(9.81*MaxG));
-    
-    for j = 1:RPMCutOffLength
-        RPM = round(RPMCutOffs(j) / GR);
-        
-        Car.Driveline.SetRPMLimit(RPM);
-        
-        [Energy, EndTime, TF ] = EnduranceSimulationBasic(Car,Track,EnduranceLength);
-        
-        MotorRPMLimit = RPM * GR;
+        Tele = Simulate(Car,Track);
 
-        RawResults(:,i,j) = [TimeAutoX,Time75,TimeSkid,EndTime,Energy,TF,MotorRPMLimit,GR];    
-    end   
+        TimeAutoX = sum(cell2mat(Tele.Results(1)));
+        Time75 = cell2mat(Tele.Results(4));
+        MaxG = Car.Tire.MaxLateralAcceleration;
+        TimeSkid = 2*pi*sqrt(9.1/(9.81*MaxG));
+
+        for k = 1:RPMCutOffLength
+            RPM = round(RPMCutOffs(k) / GR);
+            Car.Driveline.SetRPMLimit(RPM);
+
+            [Energy, EndTime, TF, Tele ] = EnduranceSimulationBasic(Car,Track,EnduranceLength);
+
+            MotorRPMLimit = RPM * GR;
+            
+            if isempty(BestResult)
+                BestResult = [TimeAutoX,Time75,TimeSkid,EndTime,Energy,TF,MotorRPMLimit,GR, WeightDistribution(i)];
+            else
+                if TimeAutoX < BestResult(1) && EndTime ~= EndTime
+                    BestResult = [TimeAutoX,Time75,TimeSkid,EndTime,Energy,TF,MotorRPMLimit,GR, WeightDistribution(i)];
+                end
+            end
+
+            RawResults{i,j,k} = Tele;
+        end   
+    end
+    
+    Results(:,i) = BestResult;
 end
 
 % parfor i = S1+1:S1*2 
