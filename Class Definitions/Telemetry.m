@@ -360,7 +360,7 @@ classdef Telemetry < handle
 
             end
             
-            Tmin = 3.506;
+            Tmin = 4.113;
             Tmax = Tmin*1.50;
             AccScore = (71.5*(Tmax/TotalAccTime-1))/((Tmax/Tmin)-1) + 3.5;
             if AccScore > 75
@@ -370,8 +370,8 @@ classdef Telemetry < handle
             end
             disp(['75m Run Score        : ', num2str(AccScore)])
             
-            Tmin = 77.664;
-            Tmax = 1.25*Tmin;
+            Tmin = 46.994;
+            Tmax = 1.45*Tmin;
 
             PerformancePoints = 142.5*(Tmax/TotalTime - 1)/(Tmax/Tmin - 1);
             if PerformancePoints < 0
@@ -384,7 +384,7 @@ classdef Telemetry < handle
             disp(['AutoCross Score      : ', num2str(AutoXScore)])
             
             SkidPadT = 2*pi*sqrt(9.1/(9.81*Gs));
-            Tmin = 4.901;
+            Tmin = 5.138;
             Tmax = 1.25*Tmin;
             SkidPadScore = 71.5*((Tmax/SkidPadT)^2-1)/((Tmax/Tmin)^2-1) + 3.5;
             if SkidPadScore > 75

@@ -4,8 +4,8 @@
 % car to run through the Lap Simulator here. Dynamic event results as well
 % as points will be outputted. 
 
-% clear all
-% clc
+clear all
+clc
 
 % winopen('SetupSheets.xlsx'); %Make sure to save excel before running, you can leave it open
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -23,8 +23,8 @@
 rowNumber = 6;
 
 Car = @()(CarBuilderSS('Combustion', rowNumber));
-Track = @FSG2013;
 % Track = @FSAEMichigan2015;
+Track = @FSG2013;
 
 car = Car();
 track = Track();
@@ -33,7 +33,7 @@ track = Track();
 % Simulate( car, track )
 % save('BatteryandRPMLimitingAnalysis')
 
-[Results, RawResults] = ExcelSweep(Track,7,15,'Combustion');
+[Results, RawResults] = ExcelSweep(Track,6,8,'Combustion');
 
 % scatter3(Results(:,6),Results(:,7),Results(:,1))
 % surf(Results(:,6),Results(:,7),Results(:,1))
@@ -51,20 +51,38 @@ track = Track();
 % ylabel('Lap Time [s]')
 % axis([375 500 86.5 90])
 
-%Cd = 0.45, Cl = -.89
-
-WB = Results(:,6);
-TrackF = Results(:,7);
+Cd = Results(:,6);
+Cl = Results(:,7);
 timed = Results(:,1);
 
-X = reshape(WB,3,3)';
-Y = reshape(TrackF,3,3)';
-Z = reshape(timed,3,3)';
+figure
+plot(Cd,timed)
+xlabel('Cd[in]')
+ylabel('time [s]')
 
-surf(X,Y,Z)
-xlabel('WheelBase [in]')
-ylabel('Track [in]')
-zlabel('Lap Time [s]')
+figure
+plot(Cl,timed)
+xlabel('Cl[in]')
+ylabel('time [s]')
 
+% w = length(Results(:,6));
+% 
+% X = reshape(Cd,4,4)';
+% Y = reshape(Cl,4,4)';
+% Z = reshape(timed,4,4)';
+% % 
+% figure
+% surf(X,Y,Z)
+% xlabel('Cd[in]')
+% ylabel('Cl [in]')
+% zlabel('Lap Time [s]')
+
+% scatter3(Cd(1,1),Cl(1,1),timed(1,1),'*','b')
+% legend('Baseline')
+% xlabel('Cd')
+% ylabel('Cl')
+% zlabel('Lap Time [s]')
+% hold on
+% scatter3(Cd(2,1),Cl(2,1),timed(2,1),'o','b')
 
 
