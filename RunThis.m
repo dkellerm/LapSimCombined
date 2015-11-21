@@ -3,9 +3,9 @@
 % User inputs will mainly be inputted into SetupSheets.xlsx. Toggle which
 % car to run through the Lap Simulator here. Dynamic event results as well
 % as points will be outputted. 
-
-clear all
-clc
+% 
+% clear all
+% clc
 
 % winopen('SetupSheets.xlsx'); %Make sure to save excel before running, you can leave it open
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -84,5 +84,3 @@ ylabel('time [s]')
 % zlabel('Lap Time [s]')
 % hold on
 % scatter3(Cd(2,1),Cl(2,1),timed(2,1),'o','b')
-
-

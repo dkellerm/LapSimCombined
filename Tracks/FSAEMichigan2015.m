@@ -96,7 +96,6 @@ SectionMatrix = [
     696.12,	747.87;
     738,	0]; % inches  [Length,Radius (O represents a straight)]
 
-
 N = length(SectionMatrix);
 
 % Builds array of TrackSection objects
