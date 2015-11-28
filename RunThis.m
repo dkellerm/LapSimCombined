@@ -57,12 +57,12 @@ timed = Results(:,1);
 
 figure
 plot(Cd,timed)
-xlabel('Cd[in]')
+xlabel('Cd')
 ylabel('time [s]')
 
 figure
 plot(Cl,timed)
-xlabel('Cl[in]')
+xlabel('Cl')
 ylabel('time [s]')
 
 % w = length(Results(:,6));
