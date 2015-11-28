@@ -66,7 +66,7 @@ SectionMatrix = [
     466,662;
     454,548;
     891,611;
-    ];
+    ]; % inches  [L,R]
 
 
 N = length(SectionMatrix);

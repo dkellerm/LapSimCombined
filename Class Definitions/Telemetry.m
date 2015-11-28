@@ -290,7 +290,7 @@ classdef Telemetry < handle
 
             TotalEnergy = sum(Energy)/3600;
 
-            disp(['Total Lap Energy (kWh): ', num2str(TotalEnergy)]);
+%             disp(['Total Lap Energy (kWh): ', num2str(TotalEnergy)]);
 
             I = Tele.LapData(:,5) == 1;
 
@@ -298,7 +298,7 @@ classdef Telemetry < handle
 
             PercentTL = TimeTTL/TotalTime * 100;
 
-            disp(['% Traction Limit     : ', num2str(PercentTL)]);
+%             disp(['% Traction Limit     : ', num2str(PercentTL)]);
 
             avgLongG = mean(abs(Tele.LapData(:,3)));
             avgLatG  = mean(abs(Tele.LapData(:,4)));
@@ -360,7 +360,7 @@ classdef Telemetry < handle
 
             end
             
-            Tmin = 3.506;
+            Tmin = 4.113;
             Tmax = Tmin*1.50;
             AccScore = (71.5*(Tmax/TotalAccTime-1))/((Tmax/Tmin)-1) + 3.5;
             if AccScore > 75
@@ -370,18 +370,21 @@ classdef Telemetry < handle
             end
             disp(['75m Run Score        : ', num2str(AccScore)])
             
-            Tmin = 77.664;
-            Tmax = 1.25*Tmin;
-            AutoXScore = 95.5*(Tmax/TotalTime - 1)/(Tmax/Tmin - 1) + 4.5;
-            if AutoXScore > 100
-                AutoXScore = 100;
-            elseif AutoXScore < 0
-                AutoXScore = 0;
+            Tmin = 46.994;
+            Tmax = 1.45*Tmin;
+
+            PerformancePoints = 142.5*(Tmax/TotalTime - 1)/(Tmax/Tmin - 1);
+            if PerformancePoints < 0
+                PerformancePoints = 0;
+            end
+            AutoXScore = PerformancePoints + 7.5;
+            if AutoXScore > 150
+                AutoXScore = 150;
             end
             disp(['AutoCross Score      : ', num2str(AutoXScore)])
             
             SkidPadT = 2*pi*sqrt(9.1/(9.81*Gs));
-            Tmin = 4.901;
+            Tmin = 5.138;
             Tmax = 1.25*Tmin;
             SkidPadScore = 71.5*((Tmax/SkidPadT)^2-1)/((Tmax/Tmin)^2-1) + 3.5;
             if SkidPadScore > 75
@@ -392,7 +395,7 @@ classdef Telemetry < handle
             disp(['Skid Pad Score       : ', num2str(SkidPadScore)])
             
             TotalScore = AccScore + AutoXScore + SkidPadScore;
-            disp(['Total Score          : ', num2str(TotalScore)])
+            disp(['Total Score          : ', num2str(TotalScore)]) %edited for comparison with static events
             
             Tele.Results = {Time,TopV,TimeV,TotalAccTime,DistV,TopA,TotalEnergy,PercentTL,TotalScore,AccScore,AutoXScore,SkidPadScore};
             

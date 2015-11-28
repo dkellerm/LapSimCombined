@@ -85,13 +85,14 @@ switch tabName
         % Electric Motor Parameters
         
         PeakTorque = 2124.18; % in-lb
+        RedLineTorque = 1354;
         Efficiency = 0.95;
         RPMLimit = 5000;
-        RPMTaper = 4000;
+        RPMTaper = 3100;
         
         RPMS = (0:1:RPMLimit)';
-        T = ones(RPMTaper + 1, 1) * 1637.39 * Tmult; % in lbf
-        T = [T;(((RPMTaper + 1:1:RPMLimit)'-RPMTaper)/(RPMLimit-RPMTaper))*(0-PeakTorque)+PeakTorque];
+        T = ones(RPMTaper + 1, 1) * PeakTorque * Tmult; % in lbf
+        T = [T;(((RPMTaper + 1:1:RPMLimit)'-RPMTaper)/(RPMLimit-RPMTaper))*(RedLineTorque-PeakTorque)+PeakTorque];
         T = T * Efficiency;
         E = ones(length(RPMS),1)*Efficiency;
         OutputCurve = [RPMS,T,E];
@@ -110,9 +111,9 @@ switch tabName
         % Engine Parameters
         
         
-        t_shift = setupSheetData(93); % shift time (s). Only 3 decimals. Value from 4/19/14 test data.
-        redline = setupSheetData(94);    % rev limit (rpm) 11500
-        engine = 'Delft';
+%         t_shift = setupSheetData(93); % shift time (s). Only 3 decimals. Value from 4/19/14 test data.
+%         redline = setupSheetData(94);    % Not used at the moment
+        engine = 'CalPolySLO';
         RPMS_raw = xlsread('torquecurves.xlsx',engine,'C:C');
         T_raw = xlsread('torquecurves.xlsx',engine,'E:E'); %in-lbf
         RPMS = (min(RPMS_raw):max(RPMS_raw))';

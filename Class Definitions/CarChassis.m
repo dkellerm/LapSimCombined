@@ -11,6 +11,7 @@ classdef CarChassis < handle
         EffectiveCG
         Length
         Track
+       
         Name = '';
     end
     

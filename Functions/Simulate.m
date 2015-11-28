@@ -26,7 +26,6 @@ function [ Tele ] = Simulate( CarObject,TrackObject )
 %**************************************************************
 % NONE
 
-
 dx = 1;
 
 CarObject.Tire.CalculateLateralGMap(CarObject, TrackObject);

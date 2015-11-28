@@ -66,10 +66,10 @@ classdef TestTrack < handle
                 TT.Length = TT.Length + TT.Track(i).Length;
             end
             
-            % Calls geometry check function
-            if ~GeometryCheck(TT)
-                disp('Warning: Track geometry possibly inconsistent.')
-            end
+%             % Calls geometry check function
+%             if ~GeometryCheck(TT)
+%                 disp('Warning: Track geometry possibly inconsistent.')
+%             end
             
             % Initialize Corner Radius Array
             sectionIsCorner = arrayfun(@(section)(section.Radius ~= 0), TT.Track);

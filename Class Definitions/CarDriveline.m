@@ -95,12 +95,12 @@ classdef CarDriveline < handle
                     end
                 end
 
-                plot(OutputCurves(1,:,1), OutputCurves(1,:,2),...
-                    OutputCurves(2,:,1), OutputCurves(2,:,2), ...
-                    OutputCurves(3,:,1), OutputCurves(3,:,2), ...
-                    OutputCurves(4,:,1), OutputCurves(4,:,2), ...
-                    OutputCurves(5,:,1), OutputCurves(5,:,2), ...
-                    D.OutputCurve(:,1), D.OutputCurve(:,2))
+%                 plot(OutputCurves(1,:,1), OutputCurves(1,:,2),...
+%                     OutputCurves(2,:,1), OutputCurves(2,:,2), ...
+%                     OutputCurves(3,:,1), OutputCurves(3,:,2), ...
+%                     OutputCurves(4,:,1), OutputCurves(4,:,2), ...
+%                     OutputCurves(5,:,1), OutputCurves(5,:,2), ...
+%                     D.OutputCurve(:,1), D.OutputCurve(:,2))
             else % Single Gear
                 maxAxleRPM = round(max(MotorOutputCurve(:,1)) / D.GearRatios(1));
                 D.OutputCurve = zeros(maxAxleRPM + 1, 6);
@@ -124,22 +124,38 @@ classdef CarDriveline < handle
                 D.SetTorqueFactor(D.CurrentTF);
             end
             
-            plot(D.OutputCurve(:,1), D.OutputCurve(:,2));
+%             plot(D.OutputCurve(:,1), D.OutputCurve(:,2));
         end
         
         function ResetTorqueCurve(D)
+            D.CurrentTF = NaN;
+            D.CurrentRPMLimit = NaN;
             D.OutputCurve = D.OriginalOutputCurve;
         end
         
         function SetTorqueFactor(D, TF)
+            if isnan(D.CurrentTF)
+                D.CurrentTF = 1;
+            end
+            
+            TF
+            
+            D.OutputCurve(:,2) = D.OutputCurve(:,2) * TF / D.CurrentTF;
+            D.OutputCurve(:,4) = D.OutputCurve(:,4) * TF / D.CurrentTF;
             D.CurrentTF = TF;
-            D.OutputCurve(:,2) = D.OutputCurve(:,2) * TF;
-            D.OutputCurve(:,4) = D.OutputCurve(:,4) * TF;
         end
         
         function SetRPMLimit(D, RPMLimit)
+            TF = 1;
+            
+            if ~isnan(D.CurrentTF)
+                TF = D.CurrentTF;
+            end
+            
+            D.ResetTorqueCurve();
             D.CurrentRPMLimit = RPMLimit;
             D.OutputCurve(RPMLimit+2:end,:) = [];
+            D.SetTorqueFactor(TF);
         end
         
         function SetGearRatios(D, GearRatios, MotorOutputCurve)
