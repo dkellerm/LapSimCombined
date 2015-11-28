@@ -10,7 +10,6 @@ classdef CarChassis < handle
         TotalWeight
         EffectiveCG
         Length
-        WF
         Track
        
         Name = '';
