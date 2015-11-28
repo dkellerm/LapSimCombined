@@ -16,7 +16,6 @@ ChassisCG = setupSheetData(18:20); % x y z (in)
 DriverWeight = setupSheetData(21); % lb
 DriverCG = setupSheetData(22:24); % x y z (in)
 ChassisWeight = setupSheetData(25); % lb
-% WF = setupSheetData(1); % Weight Distribution
 
 Chassis = CarChassis(ChassisWeight,ChassisCG,DriverWeight,DriverCG,...
     TrackWidth,WheelBase);
