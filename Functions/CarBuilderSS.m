@@ -85,13 +85,14 @@ switch tabName
         % Electric Motor Parameters
         
         PeakTorque = 2124.18; % in-lb
+        RedLineTorque = 1354;
         Efficiency = 0.95;
         RPMLimit = 5000;
-        RPMTaper = 4000;
+        RPMTaper = 3100;
         
         RPMS = (0:1:RPMLimit)';
-        T = ones(RPMTaper + 1, 1) * 1637.39 * Tmult; % in lbf
-        T = [T;(((RPMTaper + 1:1:RPMLimit)'-RPMTaper)/(RPMLimit-RPMTaper))*(0-PeakTorque)+PeakTorque];
+        T = ones(RPMTaper + 1, 1) * PeakTorque * Tmult; % in lbf
+        T = [T;(((RPMTaper + 1:1:RPMLimit)'-RPMTaper)/(RPMLimit-RPMTaper))*(RedLineTorque-PeakTorque)+PeakTorque];
         T = T * Efficiency;
         E = ones(length(RPMS),1)*Efficiency;
         OutputCurve = [RPMS,T,E];

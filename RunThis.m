@@ -25,6 +25,6 @@ rowNumber = 6;
 Car = @()(CarBuilderSS('Electric', rowNumber));
 Track = @FSAELincoln2013;
 
-[ RawResults,PointResults ] = RPMLimitingAnalysis( Car,Track );
+[ RawResults, Results ] = RPMLimitingAnalysis( Car,Track );
 %Simulate( Car,Track )
 %save('BatteryandRPMLimitingAnalysis')

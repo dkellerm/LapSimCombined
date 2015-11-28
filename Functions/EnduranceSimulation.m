@@ -42,8 +42,6 @@ while true
     
     
     if abs(Error) < Car.Battery.Capacity/100
-        Car.Driveline.ResetTorqueCurve();
-        'Breaking...'
         break
     end
     
@@ -52,7 +50,7 @@ while true
     %     OldTF = TF;
     %     TF = TF - Adjustment;
     
-    TF = TF + Error*Gain
+    TF = TF + Error*Gain;
     
     if TF > 1;
         break
@@ -68,23 +66,17 @@ while true
         
     end
     
-    figure(1)
-    plot(ErrorTracker,'ro')
-    xlabel('Iteration Number')
-    ylabel('Error (kWh)')
-    grid on
-    figure
-    plot(TFTracker,'ro')
-    xlabel('Iteration Number')
-    ylabel('Torque Factor')
-    grid on
-    
-    
+    %     figure(1)
+    %     plot(ErrorTracker,'ro')
+    %     xlabel('Iteration Number')
+    %     ylabel('Error (kWh)')
+    %     grid on
+    %     figure
+    %     plot(TFTracker,'ro')
+    %     xlabel('Iteration Number')
+    %     ylabel('Torque Factor')
+    %     grid on
 end
-
-
-
-
 
 end
 
