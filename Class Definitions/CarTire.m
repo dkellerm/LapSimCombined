@@ -19,12 +19,27 @@ classdef CarTire < handle
         EffectiveCG % CG of all tires (in inches from center rear axle)
         J % Rotational inertia (lbf in^2)
         Radius % Effective radius (in)
-        TireModel
+        FrontInclinationAngle
+        RearInclinationAngle
+        
+        TireModelLatNormalAxis
+        TireModelLatSlipAxis
+        TireModelLatCamberAxis
+        TireModelLatData
+        
+        TireModelLatAligningMoments
+        TireModelLatAligningNormal
+        TireModelLatAligningSA
+        
+        TireModelLongNormalAxis
+        TireModelLongSlipAxis
+        TireModelLongCamberAxis
+        
         Name = '';
     end
     
     methods
-        function T = CarTire(TM,K,R,Resistance,Weight,CG,J)
+        function T = CarTire(K,R,Resistance,Weight,CG,J)
             % CarTire Constructor method
             %
             % This method constructs an object of type CarTire.  To define
@@ -33,41 +48,7 @@ classdef CarTire < handle
             % rolling resistance coefficient, a weight, a center of
             % gravity, a moment of inertia about the CG, and a rotational
             % moment of inertia about the center of the tire.
-            %
-            % INPUTS
-            % Name          Type          Units   Description            
-            %**************************************************************
-            % MaxFA         float         G's     Maximum forward or
-            %                                     reverse acceleration of 
-            %                                     the tire.
-            %
-            % R             float         in      Effective tire radius
-            %
-            % Resistance    float         N/A     Rolling resistance
-            %                                     coefficient.
-            %
-            % Weight        float         lbf     Weight of all four tires
-            %
-            % CG            1x3 Array     in      Center of gravity
-            %                                     location on vehicle
-            %
-            % J             float         lb in^2 Mass moment of inertia
-            %                                     acted on by wheel torque
-            %
-            % OUTPUTS
-            % Name          Type          Units   Description            
-            %**************************************************************
-            % T             CarTire       N/A     CarTire Object
-            %
-            % VARIABLES
-            % Name          Type          Units   Description            
-            %**************************************************************
-            % NONE
-            %
-            % FUNCTIONS
-            % Name          Location         Description            
-            %**************************************************************
-            % NONE    
+            %   
             
             % Assigns values to tire object properties
             T.SpringRate = K;
@@ -76,7 +57,29 @@ classdef CarTire < handle
             T.Weight = Weight;
             T.EffectiveCG = CG;
             T.J = J;
-            T.TireModel = TM;
+            
+            SR_a = .09; % acceleration slip ratio                                    
+            SR_b = -.10; % braking slip ratio
+
+            tiredatalat = getfield(load('Hoosier_R25B_13_6_Lateral_6CF.mat'),'tiredatalat'); % Load tire data with lateral forces
+            [wid_lat,hei_lat,len_lat] = size(tiredatalat);
+            camb_lat = 0:.25:3;
+            for i = 1:len_lat
+                mtrx_lat(:,:,i) = -tiredatalat(2:wid_lat,2:wid_lat,i); % matrix with lateral forces
+            end
+            normal_lat = tiredatalat(1,2:wid_lat,1); % array with normal forces
+            slip_lat = tiredatalat(2:wid_lat,1,1); % array with slip angles
+            [NORM_lat,SLIP_lat,CAMB_lat] = meshgrid(normal_lat,slip_lat,camb_lat); % meshgrid inputs for use with interp3 function
+
+            tiredatamz_sp = xlsread('Hoosier_R25B_13_6_Mz.xlsx' , '0' , 'A1:CW101'); %read excel sheet with Mz moments
+            [widt,heit] = size(tiredatamz_sp);
+            norm_mz = tiredatamz_sp(1,2:widt); % array of normal loads
+
+            tiredatalong = xlsread('Hoosier_R25B_13_6_Longitudinal_6CF.xlsx' , '0' , 'A1:CW101'); %read excel sheet with longitudinal forces
+            [widt,heit] = size(tiredatalong);
+            norm_long = tiredatalong(1,2:widt);
+            slip_long = tiredatalong(2:heit,1);
+            mtrx_long = -tiredatalong(2:heit,2:widt);
         end
         
         function CalculateLateralGMap(T,CarObject,TrackObject)
@@ -374,6 +377,28 @@ classdef CarTire < handle
             xlabel('Lateral Gs')
             ylabel('Longitudinal Gs')
             
+        end
+        
+        function [Fy, SA] = TireOperatingPoints(T, Fz)
+                tmp = abs(T.TireModelLatNormalAxis - max([F_FLz,F_FRz,F_RLz,F_RRz])); % difference between calculated normal load and array
+                [~,idx] = min(tmp); % index of closest value
+                idxsa = find(T.TireModelLatAligningMoments(3:end,idx) == max(T.TireModelLatAligningMoments(3:end,idx))); % vertical index is at location of max Mz at the given normal load
+                SA = tiredatamz_sp(idxsa,1); % locate slip angle
+
+                C_a_FL = interp3(NORM_lat,SLIP_lat,CAMB_lat,mtrx_lat,F_FLz,SA,-IA_FLc)/SA; % FL cornering stiffness [lb/deg]
+                C_a_FR = interp3(NORM_lat,SLIP_lat,CAMB_lat,mtrx_lat,F_FRz,SA,-IA_FRc)/SA; % FR cornering stiffness [lb/deg]
+                C_a_RL = interp3(NORM_lat,SLIP_lat,CAMB_lat,mtrx_lat,F_RLz,SA,-IA_RLc)/SA; % RL cornering stiffness [lb/deg]
+                C_a_RR = interp3(NORM_lat,SLIP_lat,CAMB_lat,mtrx_lat,F_RRz,SA,-IA_RRc)/SA; % RR cornering stiffness [lb/deg]
+                    
+                alpha_FL = F_FLz*v_max0^2/(C_a_FL*g*r(aa)); % FL slip angle
+                alpha_FR = F_FRz*v_max0^2/(C_a_FR*g*r(aa)); % FR slip angle
+                alpha_RL = F_RLz*v_max0^2/(C_a_RL*g*r(aa)); % RL slip angle
+                alpha_RR = F_RRz*v_max0^2/(C_a_RR*g*r(aa)); % RR slip angle
+                    
+                F_FLy = interp3(NORM_lat,SLIP_lat,CAMB_lat,mtrx_lat,F_FLz,abs(alpha_FL),-IA_FLc); % FL lateral force
+                F_FRy = interp3(NORM_lat,SLIP_lat,CAMB_lat,mtrx_lat,F_FRz,abs(alpha_FR),-IA_FRc); % FR lateral force
+                F_RLy = interp3(NORM_lat,SLIP_lat,CAMB_lat,mtrx_lat,F_RLz,abs(alpha_RL),-IA_RLc); % RL lateral force
+                F_RRy = interp3(NORM_lat,SLIP_lat,CAMB_lat,mtrx_lat,F_RRz,abs(alpha_RR),-IA_RRc); % RR lateral force
         end
         
         
