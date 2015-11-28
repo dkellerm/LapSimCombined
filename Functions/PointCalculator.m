@@ -38,13 +38,13 @@ elseif SkidPadScore < 0
     SkidPadScore = 0;
 end
 
-Tmax = 1.333*TminEnd;
-EndScore = 300*(((Tmax/TEnd) - 1)/((Tmax/TminEnd) - 1)) + 25;
-if EndScore > 325
-    EndScore = 325;
-elseif EndScore < 0
-    EndScore = 0;
+Tmax = 1.45*TminEnd;
+if TEnd > TMax
+    Endscore = NumberOfEnduranceLaps;
+else
+    EndScore = 250*(((Tmax/TEnd) - 1)/((Tmax/TminEnd) - 1)) + 50;
 end
+
 
 EF = (TminEndLap/TEndLap)*(Emin/(LapEnergy))^2;
 EScore = 100*((EFmin/EF)-1)/((EFmin/0.88)-1);

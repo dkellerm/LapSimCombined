@@ -128,18 +128,34 @@ classdef CarDriveline < handle
         end
         
         function ResetTorqueCurve(D)
+            D.CurrentTF = NaN;
+            D.CurrentRPMLimit = NaN;
             D.OutputCurve = D.OriginalOutputCurve;
         end
         
         function SetTorqueFactor(D, TF)
+            if isnan(D.CurrentTF)
+                D.CurrentTF = 1;
+            end
+            
+            TF
+            
+            D.OutputCurve(:,2) = D.OutputCurve(:,2) * TF / D.CurrentTF;
+            D.OutputCurve(:,4) = D.OutputCurve(:,4) * TF / D.CurrentTF;
             D.CurrentTF = TF;
-            D.OutputCurve(:,2) = D.OutputCurve(:,2) * TF;
-            D.OutputCurve(:,4) = D.OutputCurve(:,4) * TF;
         end
         
         function SetRPMLimit(D, RPMLimit)
+            TF = 1;
+            
+            if ~isnan(D.CurrentTF)
+                TF = D.CurrentTF;
+            end
+            
+            D.ResetTorqueCurve();
             D.CurrentRPMLimit = RPMLimit;
             D.OutputCurve(RPMLimit+2:end,:) = [];
+            D.SetTorqueFactor(TF);
         end
         
         function SetGearRatios(D, GearRatios, MotorOutputCurve)

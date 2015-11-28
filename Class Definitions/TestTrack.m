@@ -15,6 +15,15 @@ classdef TestTrack < handle
         Sections % Number of track sections
         CurrentSection % Current section that the car is on
         CornerRadii % Array of corner radii the car will negotiate
+        
+        MinAutoXTime
+        MinEndTime
+        MinEndLapTime
+        MinSkidpadTime
+        MinAccelerationTime
+        MinEndEnergy
+        MinEndEnergyFactor
+        NumberOfEnduranceLaps
     end % properties
     
     methods
