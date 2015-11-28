@@ -23,17 +23,17 @@
 rowNumber = 6;
 
 Car = @()(CarBuilderSS('Combustion', rowNumber));
-% Track = @FSAEMichigan2015;
-Track = @FSG2013;
+Track = @FSAEMichigan2015_Schraeger_Version3;
+% Track = @FSG2013;
 
 car = Car();
 track = Track();
 
 % [ RawResults,PointResults ] = RPMLimitingAnalysis( Car,Track );
-% Simulate( car, track )
+Simulate( car, track )
 % save('BatteryandRPMLimitingAnalysis')
 
-[Results, RawResults] = ExcelSweep(Track,6,8,'Combustion');
+% [Results, RawResults] = ExcelSweep(Track,6,8,'Combustion');
 
 % scatter3(Results(:,6),Results(:,7),Results(:,1))
 % surf(Results(:,6),Results(:,7),Results(:,1))
@@ -51,19 +51,19 @@ track = Track();
 % ylabel('Lap Time [s]')
 % axis([375 500 86.5 90])
 
-Cd = Results(:,6);
-Cl = Results(:,7);
-timed = Results(:,1);
-
-figure
-plot(Cd,timed)
-xlabel('Cd')
-ylabel('time [s]')
-
-figure
-plot(Cl,timed)
-xlabel('Cl')
-ylabel('time [s]')
+% Cd = Results(:,6);
+% Cl = Results(:,7);
+% timed = Results(:,1);
+% 
+% figure
+% plot(Cd,timed)
+% xlabel('Cd')
+% ylabel('time [s]')
+% 
+% figure
+% plot(Cl,timed)
+% xlabel('Cl')
+% ylabel('time [s]')
 
 % w = length(Results(:,6));
 % 
