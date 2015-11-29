@@ -57,20 +57,12 @@ Simulate( car, track )
 % 
 % figure
 % plot(Cd,timed)
-<<<<<<< Updated upstream
 % xlabel('Cd')
-=======
-% xlabel('Cd[in]')
->>>>>>> Stashed changes
 % ylabel('time [s]')
 % 
 % figure
 % plot(Cl,timed)
-<<<<<<< Updated upstream
 % xlabel('Cl')
-=======
-% xlabel('Cl[in]')
->>>>>>> Stashed changes
 % ylabel('time [s]')
 
 % w = length(Results(:,6));
