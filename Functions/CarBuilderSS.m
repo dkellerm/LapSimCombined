@@ -2,9 +2,9 @@ function [ C ] = CarBuilderSS(tabName, rowNumber)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
-range = excelRange(excelCell(rowNumber, 'B'), excelCell(rowNumber, 'CQ'));
+range = excelRange(excelCell(rowNumber, 'E'), excelCell(rowNumber, 'CQ'));
 setupSheetData = zeros(1,95);
-setupSheetData(2:95) = xlsread('SetupSheets.xlsx', tabName, range, 'basic');
+setupSheetData(5:95) = xlsread('SetupSheets.xlsx', tabName, range, 'basic');
 
 CG = setupSheetData(18:20); % x y z (in) 'R6:T6'
 
@@ -111,7 +111,10 @@ switch tabName
         
 %         t_shift = setupSheetData(93); % shift time (s). Only 3 decimals. Value from 4/19/14 test data.
 %         redline = setupSheetData(94);    % Not used at the moment
-        engine = 'CalPolySLO';
+%         engine = 'CalPolySLO';
+        engineselection = excelCell(rowNumber, 'CV');
+        [num,txt,raw] = xlsread('SetupSheets.xlsx', tabName,engineselection);
+        engine = txt{1,1};
         RPMS_raw = xlsread('torquecurves.xlsx',engine,'C:C');
         T_raw = xlsread('torquecurves.xlsx',engine,'E:E'); %in-lbf
         RPMS = (min(RPMS_raw):max(RPMS_raw))';

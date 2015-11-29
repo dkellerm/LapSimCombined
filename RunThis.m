@@ -22,18 +22,18 @@
 %tabName = input(' Combustion or Electric? ','s');
 rowNumber = 6;
 
-Car = @()(CarBuilderSS('Combustion', rowNumber));
+% Car = @()(CarBuilderSS('Combustion', rowNumber));
 Track = @FSAEMichigan2015;
 % Track = @FSG2013;
 
-car = Car();
+% car = Car();
 track = Track();
 
 % [ RawResults,PointResults ] = RPMLimitingAnalysis( Car,Track );
-Simulate( car, track )
+% Simulate( car, track )
 % save('BatteryandRPMLimitingAnalysis')
 
-% [Results, RawResults] = ExcelSweep(Track,6,8,'Combustion');
+[Results, RawResults] = ExcelSweep(Track,rowNumber,7,'Combustion');
 
 % scatter3(Results(:,6),Results(:,7),Results(:,1))
 % surf(Results(:,6),Results(:,7),Results(:,1))
