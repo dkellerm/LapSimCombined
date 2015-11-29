@@ -47,6 +47,7 @@ BatteryandRPMLimitingAnalysis.mat
 
 # MATLAB Tempfiles
 *~
+*.asv
 
 # Excel Tempfiles
 ~*
