@@ -401,7 +401,7 @@ classdef Telemetry < handle
             disp(['Skid Pad Score       : ', num2str(SkidPadScore)])
             
             TotalScore = AccScore + AutoXScore + SkidPadScore;
-            disp(['Total Score          : ', num2str(TotalScore)]) %edited for comparison with static events
+            disp(['Total Score          : ', num2str(TotalScore)])
             
             Tele.Results = {Time,TopV,TimeV,TotalAccTime,DistV,TopA,TotalEnergy,PercentTL,TotalScore,AccScore,AutoXScore,SkidPadScore};
             

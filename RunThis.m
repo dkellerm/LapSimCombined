@@ -23,7 +23,7 @@
 rowNumber = 6;
 
 Car = @()(CarBuilderSS('Combustion', rowNumber));
-Track = @FSAEMichigan2015_Schraeger_Version3;
+Track = @FSAEMichigan2015;
 % Track = @FSG2013;
 
 car = Car();
@@ -46,25 +46,9 @@ Simulate( car, track )
 % y = min(length(Results(:,2))):0.1:length(Results(:,2));
 % Z = griddata(Results(:,6),Results(:,7),Results(:,1),x,y);
 
-% plot(sort(Results(:,6)),sort(Results(:,1)))
-% xlabel('Weight [lb]')
-% ylabel('Lap Time [s]')
-% axis([375 500 86.5 90])
-
 % Cd = Results(:,6);
 % Cl = Results(:,7);
 % timed = Results(:,1);
-% 
-% figure
-% plot(Cd,timed)
-% xlabel('Cd')
-% ylabel('time [s]')
-% 
-% figure
-% plot(Cl,timed)
-% xlabel('Cl')
-% ylabel('time [s]')
-
 % w = length(Results(:,6));
 % 
 % X = reshape(Cd,4,4)';
@@ -76,15 +60,3 @@ Simulate( car, track )
 % xlabel('Cd[in]')
 % ylabel('Cl [in]')
 % zlabel('Lap Time [s]')
-
-% scatter3(Cd(1,1),Cl(1,1),timed(1,1),'*','b')
-% legend('Baseline')
-% xlabel('Cd')
-% ylabel('Cl')
-% zlabel('Lap Time [s]')
-% hold on
-% scatter3(Cd(2,1),Cl(2,1),timed(2,1),'o','b')
-
-%[ RawResults, Results ] = RPMLimitingAnalysis( Car,Track );
-%Simulate( Car,Track )
-%save('BatteryandRPMLimitingAnalysis')

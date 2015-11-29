@@ -108,8 +108,6 @@ switch tabName
         Battery = CarBattery(Capacity,Weight,CG);
         
     case 'Combustion'
-        % Engine Parameters
-        
         
 %         t_shift = setupSheetData(93); % shift time (s). Only 3 decimals. Value from 4/19/14 test data.
 %         redline = setupSheetData(94);    % Not used at the moment
@@ -130,18 +128,16 @@ switch tabName
         fuel_brake = setupSheetData(93);
         fuel_shift = setupSheetData(94);
         % fuel_map = xlsread('SetupSheets.xlsx',setup,'CM6');
-        
-        fuel_map_raw = [ 0 .0001 .0003 .0004 .0005 .0006 .0007 .0009 .0010 .0011 .0012 ...              % GET CORRECTED VALUES (HAND CALCS OR WAVE),
-            .0014 .0015 .0016 .0017 .0019 .0020 .0021 .0022 .0023 .0025 .0027 .0028 .0029 .0030 ]'; % fuel consumption at full throttle every rpm step, starting at 0 rpm (gal/s)
-        
-        frpm = (0:max(RPMS)/length(fuel_map_raw):length(RPMS)-2)'; %RPM's array with fuel step increment
-        fuel_map = spline(frpm,fuel_map_raw,RPMS);
+        fuel_map_raw = xlsread('FuelConsumption.xlsx','Sheet1','A:A');
+
+        RPMincrement = (0:max(RPMS)/length(fuel_map_raw):length(RPMS)-2)'; %RPM's array with fuel step increment
+        fuel_map = abs(spline(RPMincrement,fuel_map_raw,RPMS));
         
         Battery = CarBattery(Capacity,Weight,CG);
         
         %Engine Parameters again
         P = 14.7; %[Psi] at WOT
-        E = abs((fuel_map.*P)./(H*1714));  %[Gal/min]*[psi]/[HP]
+        E = (fuel_map.*P*3.78541)./(H*1714);  %[L/min]*[psi]/[HP]
         
         OutputCurve = [RPMS,T,E];
         NMotors = 1;
