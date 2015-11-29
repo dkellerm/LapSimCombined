@@ -22,9 +22,9 @@
 %tabName = input(' Combustion or Electric? ','s');
 rowNumber = 6;
 
-Car = @()(CarBuilderSS('Combustion', rowNumber));
-Track = @FSAEMichigan2015_Schraeger_Version3;
-% Track = @FSG2013;
+Car = @()(CarBuilderSS('Electric', rowNumber));
+% Track = @FSAEMichigan2015;
+Track = @FSG2013;
 
 car = Car();
 track = Track();
@@ -57,12 +57,20 @@ Simulate( car, track )
 % 
 % figure
 % plot(Cd,timed)
+<<<<<<< Updated upstream
 % xlabel('Cd')
+=======
+% xlabel('Cd[in]')
+>>>>>>> Stashed changes
 % ylabel('time [s]')
 % 
 % figure
 % plot(Cl,timed)
+<<<<<<< Updated upstream
 % xlabel('Cl')
+=======
+% xlabel('Cl[in]')
+>>>>>>> Stashed changes
 % ylabel('time [s]')
 
 % w = length(Results(:,6));
