@@ -126,7 +126,7 @@ switch tabName
         
         Capacity = setupSheetData(89); % Gal
         Weight = setupSheetData(90); % lb
-        fuel_step = setupSheetData(91);
+%         fuel_step = setupSheetData(91);
         fuel_corner = setupSheetData(92);
         fuel_brake = setupSheetData(93);
         fuel_shift = setupSheetData(94);
@@ -134,13 +134,13 @@ switch tabName
         fuel_map_raw = xlsread('FuelConsumption.xlsx','Sheet1','A:A');
 
         RPMincrement = (0:max(RPMS)/length(fuel_map_raw):length(RPMS)-2)'; %RPM's array with fuel step increment
-        fuel_map = abs(spline(RPMincrement,fuel_map_raw,RPMS));
+        E = abs(spline(RPMincrement,fuel_map_raw,RPMS)); %fuel_map
         
-        Battery = CarBattery(Capacity,Weight,CG);
+        Battery = CarBattery(Capacity,Weight,CG,fuel_corner,fuel_brake,fuel_shift);
         
         %Engine Parameters again
-        P = 14.7; %[Psi] at WOT
-        E = (fuel_map.*P*3.78541)./(H*1714);  %[L/min]*[psi]/[HP]
+%         P = 14.7; %[Psi] at WOT
+%         E = (fuel_map.*P*3.78541)./(H*1714);  %[L/min]*[psi]/[HP]
         
         OutputCurve = [RPMS,T,E];
         NMotors = 1;

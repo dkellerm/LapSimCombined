@@ -33,7 +33,7 @@ track = Track();
 % Simulate( car, track )
 % save('BatteryandRPMLimitingAnalysis')
 
-[Results, RawResults] = ExcelSweep(Track,rowNumber,7,'Combustion');
+[Results, RawResults] = ExcelSweep(Track,rowNumber,6,'Combustion');
 
 % scatter3(Results(:,6),Results(:,7),Results(:,1))
 % surf(Results(:,6),Results(:,7),Results(:,1))
