@@ -39,10 +39,12 @@ R = setupSheetData(51); % in
 RollingResistance = setupSheetData(52);
 J = setupSheetData(53); % slugs in^2
 W = setupSheetData(54); % lb
-% TireModel = num2str(xlsread('SetupSheets.xlsx',setup,'BC6','basic'));
-TireModel = @Hoosier13;
 
-Tire = CarTire(TireModel,K,R,RollingResistance,W,CG,J);
+Tire = CarTire(K,R,RollingResistance,W,CG,J);
+
+% TODO: Add to setup sheet.
+Tire.FrontStaticInclinationAngle = -1.0;
+Tire.RearStaticInclinationAngle = -1.0;
 
 % Brake Parameters
 

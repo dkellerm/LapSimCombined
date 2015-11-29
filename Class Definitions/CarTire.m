@@ -9,31 +9,37 @@ classdef CarTire < handle
     properties
         MaxForwardAcceleration  % Max non turning acceleration on GG curve
         MaxBrakingAcceleration
+        
         ForwardAccelerationMap
         BrakingAccelerationMap
+        
         MaxLateralAcceleration % Max turning acceleration on GG curve
-        LateralAccelerationMap % Max Lateral acceleration for at different radii
+        LateralAccelerationMap % Max Lateral acceleration at different radii
+        
         RollingResistance % Constant rolling resistance coefficient
-        SpringRate
+        SpringRate % Tire Spring Rate
         Weight % Weight of all four tires (lbf)
         EffectiveCG % CG of all tires (in inches from center rear axle)
         J % Rotational inertia (lbf in^2)
         Radius % Effective radius (in)
-        FrontInclinationAngle
-        RearInclinationAngle
+        
+        FrontStaticInclinationAngle % deg
+        RearStaticInclinationAngle % deg
+        
+%         % Dynamic Camber Features to be implemented later.        
+%         FrontInclinationDynamic % deg/g
+%         RearInclinationDyanmic % deg/g
+%         
+%         FrontInclinationSteer % deg/deg-steer
         
         TireModelLatNormalAxis
         TireModelLatSlipAxis
         TireModelLatCamberAxis
         TireModelLatData
         
-        TireModelLatAligningMoments
-        TireModelLatAligningNormal
-        TireModelLatAligningSA
-        
         TireModelLongNormalAxis
         TireModelLongSlipAxis
-        TireModelLongCamberAxis
+        TireModelLongForceMatrix
         
         Name = '';
     end
@@ -57,36 +63,34 @@ classdef CarTire < handle
             T.Weight = Weight;
             T.EffectiveCG = CG;
             T.J = J;
-            
-            SR_a = .09; % acceleration slip ratio                                    
-            SR_b = -.10; % braking slip ratio
 
-            tiredatalat = getfield(load('Hoosier_R25B_13_6_Lateral_6CF.mat'),'tiredatalat'); % Load tire data with lateral forces
-            [wid_lat,hei_lat,len_lat] = size(tiredatalat);
-            camb_lat = 0:.25:3;
+            % Initialize lateral force matrix
+            tiredatalat = getfield(load('Hoosier_R25B_13_6_Lateral_6CF.mat'),'tiredatalat'); % Load tire data with lateral forces (SlipAngle, NormalForce, CamberAngle)
+            [wid_lat, ~, len_lat] = size(tiredatalat);
             for i = 1:len_lat
-                mtrx_lat(:,:,i) = -tiredatalat(2:wid_lat,2:wid_lat,i); % matrix with lateral forces
+                T.TireModelLatData(:,:,i) = -tiredatalat(2:wid_lat,2:wid_lat,i); % matrix with lateral forces
             end
+            
+            % Initialize meshgrid axes for interp3
             normal_lat = tiredatalat(1,2:wid_lat,1); % array with normal forces
             slip_lat = tiredatalat(2:wid_lat,1,1); % array with slip angles
-            [NORM_lat,SLIP_lat,CAMB_lat] = meshgrid(normal_lat,slip_lat,camb_lat); % meshgrid inputs for use with interp3 function
+            camb_lat = 0:.25:3; % array with camber angles
+            
+            [T.TireModelLatNormalAxis, T.TireModelLatSlipAxis, T.TireModelLatCamberAxis] = meshgrid(normal_lat,slip_lat,camb_lat); % meshgrid inputs for use with interp3 function
 
-            tiredatamz_sp = xlsread('Hoosier_R25B_13_6_Mz.xlsx' , '0' , 'A1:CW101'); %read excel sheet with Mz moments
-            [widt,heit] = size(tiredatamz_sp);
-            norm_mz = tiredatamz_sp(1,2:widt); % array of normal loads
-
-            tiredatalong = xlsread('Hoosier_R25B_13_6_Longitudinal_6CF.xlsx' , '0' , 'A1:CW101'); %read excel sheet with longitudinal forces
+            % Initialize Longitudinal Data from Excel
+            tiredatalong = xlsread('Tire Data/Hoosier_R25B_13_6_Longitudinal_6CF.xlsx' , '0' , 'A1:CW101'); %read excel sheet with longitudinal forces
             [widt,heit] = size(tiredatalong);
-            norm_long = tiredatalong(1,2:widt);
-            slip_long = tiredatalong(2:heit,1);
-            mtrx_long = -tiredatalong(2:heit,2:widt);
+            T.TireModelLongNormalAxis = tiredatalong(1,2:widt);
+            T.TireModelLongSlipAxis = tiredatalong(2:heit,1);
+            T.TireModelLongForceMatrix = -tiredatalong(2:heit,2:widt);
         end
         
         function CalculateLateralGMap(T,CarObject,TrackObject)
             TrackCornerRadii = TrackObject.TrackCornerRadii();
             TrackCornerRadii = unique(TrackCornerRadii);
             
-            % Balance Car at closest to average corner
+            % Balance Car at closest to average corner radius
             averageCornerRadius = mean(TrackCornerRadii);
             [~, closestToAverageCornerRadiusIndex] = min(abs(TrackCornerRadii-averageCornerRadius));
             LateralGCalculator(T, CarObject, 'Balance', TrackCornerRadii(closestToAverageCornerRadiusIndex));
@@ -128,6 +132,8 @@ classdef CarTire < handle
             Velocity = sqrt(Gs * 32.2 * Radius/12);
             Fz_aero_delta = CarObject.CalculateAeroEffects(Velocity);
             
+            SlipAngleGuesses = 4:.1:8;
+            
             UnbalanceFlag = 1;
             
             while true
@@ -137,13 +143,21 @@ classdef CarTire < handle
                 Fz = Fz + Fz_aero_delta;
                 
                 % Set wheel forces less than zero to zero
-                I = Fz < 0
+                I = Fz < 0;
                 Fz(I) = 1;
+                Fz = Fz * -1; % Tire Data is incorrectly defined as Fz down being negative.
                 
-                [Fy, ~] = T.TireModel(Fz,'Lateral');
+                % Find tire lateral forces at different slip angles.
+                FyFI = interp3(T.TireModelLatNormalAxis, T.TireModelLatSlipAxis, T.TireModelLatCamberAxis, T.TireModelLatData, Fz(:,1), SlipAngleGuesses, 0); % Tire Data isn't fit for negative inclination angles so using zero
+                FyFO = interp3(T.TireModelLatNormalAxis, T.TireModelLatSlipAxis, T.TireModelLatCamberAxis, T.TireModelLatData, Fz(:,2), SlipAngleGuesses, -T.FrontStaticInclinationAngle);
+                FyRI = interp3(T.TireModelLatNormalAxis, T.TireModelLatSlipAxis, T.TireModelLatCamberAxis, T.TireModelLatData, Fz(:,3), SlipAngleGuesses, 0); % Tire Data isn't fit for negative inclination angles so using zero
+                FyRO = interp3(T.TireModelLatNormalAxis, T.TireModelLatSlipAxis, T.TireModelLatCamberAxis, T.TireModelLatData, Fz(:,4), SlipAngleGuesses, -T.RearStaticInclinationAngle);
+                
+                % Assume ideal slip angle selection
+                Fy = [max(FyFI,[],1); max(FyFO, [], 1); max(FyRI, [], 1); max(FyRO, [], 1)]';
                 
                 % Remove any NaN wheel forces.
-                NaNI = isnan(Fy)
+                NaNI = isnan(Fy);
                 Fy(NaNI) = 0;
 
                 FyFront = Fy(:,1) + Fy(:,2);
@@ -211,7 +225,7 @@ classdef CarTire < handle
             end
             
             if Fz(171,1) <= 0
-                disp('Warning, car fails tilt test')
+%                 disp('Warning, car fails tilt test')
             elseif Fz(I,1) <= 0
                 disp('Warning, car flips before max lateral acceleration acheived')
             end
@@ -249,6 +263,7 @@ classdef CarTire < handle
             FR = [ a b ];
             
             Gs = (0:0.01:2)';
+            SlipRatioGuesses = .01:.01:.1;
             
             Fz = LongitudinalWeightTransfer( Kf, Kr, Kt, Gs, Ws, Wfus, Wrus, hCG, PC, FR, L );
             Fz_aero_deltas = CarObject.CalculateAeroEffects(Velocity);
@@ -258,9 +273,12 @@ classdef CarTire < handle
             Fz(:,3) = Fz(:,3) + Fz_aero_deltas(3);
             Fz(:,4) = Fz(:,4) + Fz_aero_deltas(4);
 
-            [Fx, SR] = T.TireModel(Fz,'Longitudinal');
+            Fz = Fz * -1; % Tire Data is incorrectly defined as Fz down being negative.
+            
+            Fx_RL = interp2(T.TireModelLongNormalAxis,T.TireModelLongSlipAxis,T.TireModelLongForceMatrix,Fz(:,3),SlipRatioGuesses);
+            Fx_RR = interp2(T.TireModelLongNormalAxis,T.TireModelLongSlipAxis,T.TireModelLongForceMatrix,Fz(:,4),SlipRatioGuesses);
 
-            FxRear  = Fx(:,3) + Fx(:,4);
+            FxRear  = (max(Fx_RL, [], 1) + max(Fx_RR, [], 1))' * -1;
 
             W = Ws + Wrus + Wfus;
             RearGs = FxRear/W;
@@ -283,6 +301,12 @@ classdef CarTire < handle
             Gs = -(0:0.01:5)';
             
             Fz = LongitudinalWeightTransfer( Kf, Kr, Kt, Gs, Ws, Wfus, Wrus, hCG, PC, FR, L );
+            Fz_aero_deltas = CarObject.CalculateAeroEffects(Velocity);
+            
+            Fz(:,1) = Fz(:,1) + Fz_aero_deltas(1);
+            Fz(:,2) = Fz(:,2) + Fz_aero_deltas(2);
+            Fz(:,3) = Fz(:,3) + Fz_aero_deltas(3);
+            Fz(:,4) = Fz(:,4) + Fz_aero_deltas(4);
             
             I = find(Fz(:,3:4) < 0);
             
@@ -291,11 +315,18 @@ classdef CarTire < handle
                 Gs = Gs(1:I(1)-1);
             end
             
-            [Fx,SR] = T.TireModel(Fz,'Longitudinal');
+            Fz = Fz * -1; % Tire Data is incorrectly defined as Fz down being negative.
+            
+            Fx_FI = interp2(T.TireModelLongNormalAxis,T.TireModelLongSlipAxis,T.TireModelLongForceMatrix,Fz(:,1),SlipRatioGuesses);
+            Fx_FO = interp2(T.TireModelLongNormalAxis,T.TireModelLongSlipAxis,T.TireModelLongForceMatrix,Fz(:,2),SlipRatioGuesses);
+            Fx_RI = interp2(T.TireModelLongNormalAxis,T.TireModelLongSlipAxis,T.TireModelLongForceMatrix,Fz(:,3),SlipRatioGuesses);
+            Fx_RO = interp2(T.TireModelLongNormalAxis,T.TireModelLongSlipAxis,T.TireModelLongForceMatrix,Fz(:,4),SlipRatioGuesses);
+            
+            Fx = [max(Fx_FI, [], 1); max(Fx_FO, [], 1); max(Fx_RI, [], 1); max(Fx_RO, [], 1)]';
 
             FxTotal = Fx(:,1) + Fx(:,2) + Fx(:,3) + Fx(:,4);
             
-            OutGs = -FxTotal/W;
+            OutGs = FxTotal/W;
             
             Difference = OutGs - Gs;
             I1 = find(Difference >= 0,1,'last');
