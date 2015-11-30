@@ -107,8 +107,8 @@ classdef CarDriveline < handle
                 D.OutputCurve(:,1) = 0:maxAxleRPM;
                 
                 D.OutputCurve(:, 2) = interp1(MotorOutputCurve(:,1), MotorOutputCurve(:,2), D.OutputCurve(:,1) * D.GearRatios(1)) * D.GearRatios(1);
-                D.OutputCurve(:, 3) = D.OutputCurve(:,1) / D.GearRatios(1);
-                D.OutputCurve(:, 4) = D.OutputCurve(:,2) * D.GearRatios(1);
+                D.OutputCurve(:, 3) = D.OutputCurve(:,1) * D.GearRatios(1);
+                D.OutputCurve(:, 4) = D.OutputCurve(:,2) / D.GearRatios(1);
                 D.OutputCurve(:, 5) = interp1(MotorOutputCurve(:,1), MotorOutputCurve(:,3), D.OutputCurve(:,1));
                 D.OutputCurve(:, 6) = 1;
             end
