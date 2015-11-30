@@ -135,13 +135,13 @@ classdef CarTire < handle
                 Fz = Fz + Fz_aero_delta;
                 
                 % Set wheel forces less than zero to zero
-                I = Fz < 0
+                I = Fz < 0;
                 Fz(I) = 1;
                 
                 [Fy, ~] = T.TireModel(Fz,'Lateral');
                 
                 % Remove any NaN wheel forces.
-                NaNI = isnan(Fy)
+                NaNI = isnan(Fy);
                 Fy(NaNI) = 0;
 
                 FyFront = Fy(:,1) + Fy(:,2);
@@ -258,7 +258,7 @@ classdef CarTire < handle
             Fz(:,3) = Fz(:,3) + Fz_aero_deltas(3);
             Fz(:,4) = Fz(:,4) + Fz_aero_deltas(4);
 
-            [Fx, SR] = T.TireModel(Fz,'Longitudinal');
+            [Fx, ~] = T.TireModel(Fz,'Longitudinal');
 
             FxRear  = Fx(:,3) + Fx(:,4);
 
