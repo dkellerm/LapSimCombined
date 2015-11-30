@@ -104,7 +104,7 @@ end
 Miscellaneous = {EntranceV,ExitV,BP,BPSpeed};
 Tele = Telemetry(Miscellaneous);
 Tele.LapStitch(TrackObject);
-Tele.LapResultCalculator(TrackObject,CarObject.Tire.MaxLateralAcceleration);
+Tele.LapResultCalculator(TrackObject,CarObject.Tire.MaxLateralAcceleration,CarObject);
 
 end
 

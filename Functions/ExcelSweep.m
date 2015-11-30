@@ -21,7 +21,7 @@ function [Results, RawResults] = ExcelSweep(TrackFcn, StartRow, EndRow, TabName)
 		TimeSkid = 2*pi*sqrt(9.1/(9.81*MaxG));
 		TimeEnd = TimeAutoX * EnduranceLaps;
         
-        switch TabName
+        switch CarTabName
             case 'Electric'
         
 		EnduranceLapPowers = Tele.LapData(1:Track.Length,8)*0.000112985;

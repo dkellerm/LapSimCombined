@@ -22,7 +22,7 @@ classdef Telemetry < handle
             Tele.Miscellaneous = M;
         end
         
-        function LapStitch(Tele,Track)
+        function LapStitch(Tele,Track,Car)
             % Telemetry LapStich method
             %
             % This method takes individual track section data and stitches
@@ -280,7 +280,7 @@ classdef Telemetry < handle
             
         end
         
-        function LapResultCalculator(Tele,Track,Gs)
+        function LapResultCalculator(Tele,Track,Gs,Car)
             
             S = Track.Sections;
 
@@ -404,7 +404,6 @@ classdef Telemetry < handle
             end
             disp(['Skid Pad Score       : ', num2str(SkidPadScore)])
             
-            Tmintotal = 1322.563;
             TminEnd = 73.48;
             Tmax = 1.45*TminEnd;
                     if TotalTime > Tmax
@@ -418,9 +417,14 @@ classdef Telemetry < handle
                 EFmin = 0.36;
                 EFmax = 0.93;
                 CO2min = .3594;
-                CO2kg = 0.4635; %kg from Lincoln 2015
-%                 EF = (TminEndLap/TEndLap)*(Emin/(LapEnergy))^2;
-                EF = (Tmintotal/TEnd)*(CO2min/CO2kg);
+                switch Car.TabName
+                    case 'Combustion'
+                        CO2kg = Car.Battery.Capacity*2.3/EnduranceLaps;
+                    case 'Electric'
+                        CO2kg = Car.Battery.Capacity*0.65/EndurancceLaps;
+                end
+                
+                EF = (TminEnd/TotalTime)*(CO2min/CO2kg);
                 EScore = 100*((EFmin/EF)-1)/((EFmin/EFmax)-1);
                 if EScore > 100
                     EScore = 100;
@@ -439,4 +443,5 @@ classdef Telemetry < handle
     end
     
 end
+
 
