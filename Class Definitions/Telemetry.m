@@ -12,7 +12,7 @@ classdef Telemetry < handle
         LapData = []; % Lap data stored in a matrix with columns in the following order
                       % [Position,Velocity,Long. Gs, Lat. Gs, Traction
                       % Limit Reached, Wheel RPM, Motor RPM, Motor Power, Motor
-                      % Torque, Braking Torque, Time]
+                      % Torque, Braking Torque, Time, Efficiency]
         LapDataStructure = [];
     end
     
@@ -153,6 +153,7 @@ classdef Telemetry < handle
                     MT = ones(length(X),1).*Acc(end,9);
                     BT = zeros(length(X),1);
                     NewT  = ones(length(X),1).*Acc(end,11);
+                   
                     % Create data appendix
                     Appendix = [X,V,FG,LG,TL,WR,MR,P,MT,BT,NewT];
                     % Append data
@@ -318,7 +319,7 @@ classdef Telemetry < handle
             
         end
         
-        function LapResultCalculator(Tele,Track,Gs)
+        function LapResultCalculator(Tele,Track,Gs,Car)
             
             S = Track.Sections;
 
@@ -333,6 +334,14 @@ classdef Telemetry < handle
             TotalEnergy = sum(Energy)/3600/1000;
 
             disp(['Total Lap Energy (kWh): ', num2str(TotalEnergy)]);
+            
+            EnduranceLength = 866142; % 22km in inches
+            EnduranceLaps = ceil(EnduranceLength/Track.Length);
+            TEnd = EnduranceLaps*TotalTime;
+            
+            Power = Tele.LapData(:,8);
+            Power = Power*0.000112985;
+            Energy = (Power.*Time);
 
             I = Tele.LapData(:,5) == 1;
 
@@ -402,7 +411,7 @@ classdef Telemetry < handle
 
             end
             
-            Tmin = 4.113;
+            Tmin = 4.070;
             Tmax = Tmin*1.50;
             AccScore = (71.5*(Tmax/TotalAccTime-1))/((Tmax/Tmin)-1) + 3.5;
             if AccScore > 75
@@ -412,7 +421,7 @@ classdef Telemetry < handle
             end
             disp(['75m Run Score        : ', num2str(AccScore)])
             
-            Tmin = 46.994;
+            Tmin = 76.908;
             Tmax = 1.45*Tmin;
 
             PerformancePoints = 142.5*(Tmax/TotalTime - 1)/(Tmax/Tmin - 1);
@@ -426,7 +435,7 @@ classdef Telemetry < handle
             disp(['AutoCross Score      : ', num2str(AutoXScore)])
             
             SkidPadT = 2*pi*sqrt(9.1/(9.81*Gs));
-            Tmin = 5.138;
+            Tmin = 5.602;
             Tmax = 1.25*Tmin;
             SkidPadScore = 71.5*((Tmax/SkidPadT)^2-1)/((Tmax/Tmin)^2-1) + 3.5;
             if SkidPadScore > 75
@@ -436,13 +445,44 @@ classdef Telemetry < handle
             end
             disp(['Skid Pad Score       : ', num2str(SkidPadScore)])
             
-            TotalScore = AccScore + AutoXScore + SkidPadScore;
-            disp(['Total Score          : ', num2str(TotalScore)]) %edited for comparison with static events
+            TminEnd = 73.48;
+            Tmax = 1.45*TminEnd;
+                    if TotalTime > Tmax
+                        EndScore = EnduranceLaps;
+                    else
+                        EndScore = 250*(((Tmax/TotalTime) - 1)/((Tmax/TminEnd) - 1)) + 50;
+                    end
+                    
+                   disp(['Endurance Score       : ', num2str(EndScore)])
+                   
+                EFmin = 0.36;
+                EFmax = 0.93;
+                CO2min = .3594;
+                switch Car.TabName
+                    case 'Combustion'
+                        CO2kg = Car.Battery.Capacity*2.3/EnduranceLaps;
+                    case 'Electric'
+                        CO2kg = Car.Battery.Capacity*0.65/EndurancceLaps;
+                end
+                
+                EF = (TminEnd/TotalTime)*(CO2min/CO2kg);
+                EScore = 100*((EFmin/EF)-1)/((EFmin/EFmax)-1);
+                if EScore > 100
+                    EScore = 100;
+                elseif EScore < 0
+                    EScore = 0;
+                end
+                
+                disp(['Efficiency Score       : ', num2str(EScore)])
             
-            Tele.Results = {Time,TopV,TimeV,TotalAccTime,DistV,TopA,TotalEnergy,PercentTL,TotalScore,AccScore,AutoXScore,SkidPadScore};
+            TotalScore = AccScore + AutoXScore + SkidPadScore + EScore + EndScore;
+            disp(['Total Score          : ', num2str(TotalScore)])
+            
+            Tele.Results = {Time,TopV,TimeV,TotalAccTime,DistV,TopA,TotalEnergy,PercentTL,TotalScore,AccScore,AutoXScore,SkidPadScore,EndScore};
             
         end
     end
     
 end
+
 

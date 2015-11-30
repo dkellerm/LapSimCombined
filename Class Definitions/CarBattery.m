@@ -8,6 +8,7 @@ classdef CarBattery < handle
         EffectiveCG
         Resistance
         NominalVoltage
+
         Name = '';
     end
     
