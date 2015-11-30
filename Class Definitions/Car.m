@@ -95,7 +95,7 @@ classdef Car < handle
             % previously adjusted to match tire acceleration
             [~, TractiveLimit] = ismember(ForwardGs, maxForwardGsTire);
             
-            %    1       2     3        4            5         6      7       8         9        10
+            %    1       2     3        4            5         6           7     8         9        10
             LookUpTable = [Velocity,Drag,AxleRPM,MotorRPM,AdjustedMotorT,MotorE,Power,ForwardGs,LateralGs,TractiveLimit];
         end
             
@@ -117,16 +117,23 @@ classdef Car < handle
             % Calculate axle and motor rpms based on velocity
             AxleRPM = Velocity/(CarObject.Tire.Radius*pi/30);
             MotorRPM = CarObject.Driveline.OutputCurve(round(AxleRPM)+1, 3);
-            % Calculate applied brake torque based on wheel force
-            BrakeTorque = WheelF*CarObject.Tire.Radius;
+            
+            % Calculate applied brake/motor torque based on wheel force
+            if strcmp(CarObject.BrakingMode, 'Regen')
+                MotorTorque = -WheelF.*AxleRPM./MotorRPM*CarObject.Tire.Radius;
+                BrakeTorque = zeros(length(MotorTorque),1);
+            elseif strcmp(CarObject.BrakingMode, 'Hydraulic')
+                BrakeTorque = WheelF*CarObject.Tire.Radius;
+                MotorTorque = zeros(length(BrakeTorque),1);
+            end
             
             if strcmp(CarObject.BrakingMode, 'Hydraulic')
                 % Assume brakes use tire at full potential
-                PowerConsumed = zeros(length(BrakeTorque),1);
+                MotorPower = zeros(length(MotorTorque),1);
             elseif strcmp(CarObject.BrakingMode, 'Regen')
                 % Assume motor uses tires at full potential
                 Efficiency = .9 * .95 * .9; % Motor * Driveline * Battery
-                PowerConsumed = (BrakeTorque .* AxleRPM)/Efficiency * pi/30;
+                MotorPower = (MotorTorque .* MotorRPM)/Efficiency * pi/30;
             end
             
             % Straight brake curve, therefore lateral Gs is always zero
@@ -135,8 +142,8 @@ classdef Car < handle
             % Tractive limit is reached at all points with ideal braking
             TractiveLimit = ones(length(ForwardGs),1);
             
-                        %    1       2     3        4       5           6          7             8
-            LookUpTable = [Velocity,Drag,AxleRPM,MotorRPM,BrakeTorque,ForwardGs,LateralGs,TractiveLimit, PowerConsumed];
+                           %    1       2     3        4       5           6        7           8               9
+            LookUpTable = [Velocity,Drag,AxleRPM,MotorRPM,BrakeTorque,ForwardGs,LateralGs,TractiveLimit, MotorTorque, MotorPower];
         end
         
         function [ LookUpTable ] = CornerAccTableGenerator( CarObject,R,Velocity,Drag)
@@ -244,7 +251,7 @@ classdef Car < handle
             TractiveLimit = BrakeTorque < sum(CarObject.Brakes.Torque);
               
             %                  1      2     3        4         5        6        7           8
-            LookUpTable = [Velocity,Drag,AxleRPM,MotorRPM,BrakeTorque,BackGs,LateralGs,TractiveLimit, zeros(length(LateralGs),1)];
+            LookUpTable = [Velocity,Drag,AxleRPM,MotorRPM,BrakeTorque,BackGs,LateralGs,TractiveLimit, zeros(length(LateralGs),1), zeros(length(LateralGs),1)];
             
         end
         

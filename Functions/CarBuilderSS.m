@@ -104,8 +104,10 @@ switch tabName
         
         Capacity = setupSheetData(89); % kWh
         Weight = setupSheetData(90); % lb
+        NominalVoltage = 262.2; % V
+        Resistance = 0.16; % ohms
         
-        Battery = CarBattery(Capacity,Weight,CG);
+        Battery = CarBattery(Capacity,Weight,CG,Resistance,NominalVoltage);
         
     case 'Combustion'
         % Engine Parameters
@@ -166,7 +168,7 @@ C = Car(Brakes,Driveline,Motor,Chassis,Battery,Suspension,Tire,Drag,CrossArea);
 C.LiftCoefficient = Lift;
 C.Rho = rho;
 C.CenterOfPressure = cop;
-C.BrakingMode = 'Hydraulic';
+C.BrakingMode = 'Regen';
 
 end
 

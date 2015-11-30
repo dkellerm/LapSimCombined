@@ -6,14 +6,18 @@ classdef CarBattery < handle
         Capacity
         Weight
         EffectiveCG
+        Resistance
+        NominalVoltage
         Name = '';
     end
     
     methods
-        function B = CarBattery(Capacity,Weight,CG)
+        function B = CarBattery(Capacity,Weight,CG,Resistance,NominalVoltage)
             B.Capacity = Capacity;
             B.Weight = Weight;
             B.EffectiveCG = CG;
+            B.Resistance = Resistance;
+            B.NominalVoltage = NominalVoltage;
         end
         
     end

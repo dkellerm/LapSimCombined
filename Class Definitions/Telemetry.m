@@ -11,8 +11,9 @@ classdef Telemetry < handle
         Results = {}; % Processed simulator results, e.g. top speed, lap time etc
         LapData = []; % Lap data stored in a matrix with columns in the following order
                       % [Position,Velocity,Long. Gs, Lat. Gs, Traction
-                      % Limit Reached, Wheel RPM, Motor RPM, Power, Motor
+                      % Limit Reached, Wheel RPM, Motor RPM, Motor Power, Motor
                       % Torque, Braking Torque, Time]
+        LapDataStructure = [];
     end
     
     methods
@@ -22,7 +23,7 @@ classdef Telemetry < handle
             Tele.Miscellaneous = M;
         end
         
-        function LapStitch(Tele,Track)
+        function LapStitch(Tele,Track, CarObject)
             % Telemetry LapStich method
             %
             % This method takes individual track section data and stitches
@@ -218,8 +219,8 @@ classdef Telemetry < handle
                 AccStartIndex = find(Acc(:,1) == 0);
                 AccEndIndex = find(Acc(:,1) == BP(i,1));
                 if AccEndIndex
-                else
                     Acc(end+1,:) = Acc(end,:);
+                else
                     Acc(end,1) = Acc(end,1) + dx;
                     AccEndIndex = find(Acc(:,1) == BP(i,1));
                 end
@@ -275,7 +276,46 @@ classdef Telemetry < handle
             NewGs = (LapDataStitch(2:end,2) - LapDataStitch(1:end-1,2))./LapDataStitch(2:end,11);
             LapDataStitch(2:end,3) = NewGs/(12*32.174);
             
+            LapDataStitch(1,7:9) = [0 0 0];
+            
             Tele.LapData = LapDataStitch;
+            
+            % Create data vectors
+            Position = LapDataStitch(:,1); %in
+            Velocity = LapDataStitch(:,2); %in/s
+            LongG = LapDataStitch(:,3); %g
+            LatG = LapDataStitch(:,4); %g
+            TractionLimitReached = LapDataStitch(:,5);
+            WheelRPM = LapDataStitch(:,6);
+            MotorRPM = LapDataStitch(:,7);
+            MotorPower = LapDataStitch(:,8) * 0.112985; %W
+            MotorTorque = LapDataStitch(:,9); %in-lb
+            BrakingTorque = LapDataStitch(:,10); %in-lb
+            Time = LapDataStitch(:,11);
+            
+            B = CarObject.Battery;
+            BatteryCurrent = -1 * (-B.NominalVoltage + sqrt(MotorPower * -4 * B.Resistance + B.NominalVoltage^2))./...
+                (2 * B.Resistance);
+            BatteryVoltage = -BatteryCurrent * B.Resistance + B.NominalVoltage;
+            BatteryPower = BatteryCurrent .* BatteryVoltage;
+            
+            % Create data structure
+            Tele.LapDataStructure = struct(...
+                'Position', Position,...
+                'Velocity', Velocity,...
+                'LongG', LongG,...
+                'LatG', LatG,...
+                'TractionLimitReached', TractionLimitReached,...
+                'WheelRPM', WheelRPM,...
+                'MotorRPM', MotorRPM,...
+                'MotorPower', MotorPower,...
+                'MotorTorque', MotorTorque,...
+                'BrakingTorque', BrakingTorque,...
+                'Time', Time,...
+                'BatteryCurrent', BatteryCurrent,...
+                'BatteryVoltage', BatteryVoltage,...
+                'BatteryPower', BatteryPower);
+            
             
         end
         
@@ -288,15 +328,12 @@ classdef Telemetry < handle
             TotalTime = sum(Time);
 
             disp(['Total Lap Time (s)   : ', num2str(TotalTime)]);
+            
+            Energy = Tele.LapDataStructure.BatteryPower .* Tele.LapDataStructure.Time;
 
+            TotalEnergy = sum(Energy)/3600/1000;
 
-            Power = Tele.LapData(:,8);
-            Power = Power*0.000112985;
-            Energy = (Power.*Time);
-
-            TotalEnergy = sum(Energy)/3600;
-
-%             disp(['Total Lap Energy (kWh): ', num2str(TotalEnergy)]);
+            disp(['Total Lap Energy (kWh): ', num2str(TotalEnergy)]);
 
             I = Tele.LapData(:,5) == 1;
 

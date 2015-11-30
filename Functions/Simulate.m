@@ -103,7 +103,7 @@ end
 [ EntranceV, ExitV, BP, BPSpeed ] = BrakePointIterator( TrackObject,MaxV,EntranceV,ExitV );
 Miscellaneous = {EntranceV,ExitV,BP,BPSpeed};
 Tele = Telemetry(Miscellaneous);
-Tele.LapStitch(TrackObject);
+Tele.LapStitch(TrackObject, CarObject);
 Tele.LapResultCalculator(TrackObject,CarObject.Tire.MaxLateralAcceleration);
 
 end
@@ -111,14 +111,16 @@ end
 function [ Results ] = BrakeCurve( Table,dx )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
-
+%   1         2     3       4           5       6           7           8
+% [Velocity,Drag,AxleRPM,MotorRPM,BrakeTorque,ForwardGs,LateralGs,TractiveLimit, MotorTorque, MotorPower];
 Vel = Table(:,1);
 ARPM = Table(:,3);
 MRPM = Table(:,4);
 Acc = Table(:,6);
 Torque = Table(:,5);
 LatGs = Table(:,7);
-PowerConsumed = Table(:,9);
+MotorTorque = Table(:,9);
+MotorPower = Table(:,10);
 
 Vel = Vel.^2;
 Acc = -Acc*32.174*12;
@@ -140,8 +142,11 @@ B4 = Torque(2:end) - M4.*Vel(2:end);
 M5 = (LatGs(2:end) - LatGs(1:end-1))./(Vel(2:end) - Vel(1:end-1));
 B5 = LatGs(2:end) - M5.*Vel(2:end);
 
-M6 = (PowerConsumed(2:end) - PowerConsumed(1:end-1))./(Vel(2:end) - Vel(1:end-1));
-B6 = PowerConsumed(2:end) - M6.*Vel(2:end);
+M6 = (MotorPower(2:end) - MotorPower(1:end-1))./(Vel(2:end) - Vel(1:end-1));
+B6 = MotorPower(2:end) - M6.*Vel(2:end);
+
+M7 = (MotorTorque(2:end) - MotorTorque(1:end-1))./(Vel(2:end) - Vel(1:end-1));
+B7 = MotorTorque(2:end) - M7.*Vel(2:end);
 
 V = StartV^2;
 X = 0;
@@ -150,11 +155,12 @@ AR = ARPM(end);
 MR = MRPM(end);
 TQ = Torque(end);
 LG = LatGs(end);
-P = PowerConsumed(end);
+MT = MotorTorque(end);
+P = MotorPower(end);
 
-Result = [X,V,A,AR,MR,TQ,LG,P];
+Result = [X,V,A,AR,MR,TQ,LG,MT,P];
 
-Results = zeros(6000,8);
+Results = zeros(6000,9);
 TL = zeros(6000,1);
 
 Results(1,:) = Result;
@@ -199,15 +205,17 @@ while V
         TQ = M4(a)*avgV + B4(a);
         LG = M5(a)*avgV + B5(a);
         P =  M6(a)*avgV + B6(a);
+        MT = M7(a)*avgV + B7(a);
     else
         AR = M2(end)*avgV + B2(end);
         MR = M3(end)*avgV + B3(end);
         TQ = M4(end)*avgV + B4(end);
         LG = M5(end)*avgV + B5(end);
         P =  M6(end)*avgV + B6(end);
+        MT = M7(end)*avgV + B7(end);
     end
-    
-    Result = [X,V,A,AR,MR,TQ,LG,P];
+    %         1,2,3,4, 5, 6, 7, 8, 9
+    Result = [X,V,A,AR,MR,TQ,LG,MT,P];
     
     Results(i,:) = Result;
     
@@ -230,10 +238,8 @@ T = dx./Vavg;
 
 T = [0;T];
 
-ZeroApp = zeros(length(T),1);
-
 Results = [Results(:,1),Results(:,2),Results(:,3),Results(:,7),...
-    TL,Results(:,4),Results(:,5),ZeroApp,ZeroApp,...
+    TL,Results(:,4),Results(:,5),Results(:,9),Results(:,8),...
     Results(:,6),T];
 
 
