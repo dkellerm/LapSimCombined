@@ -166,6 +166,7 @@ C = Car(Brakes,Driveline,Motor,Chassis,Battery,Suspension,Tire,Drag,CrossArea);
 C.LiftCoefficient = Lift;
 C.Rho = rho;
 C.CenterOfPressure = cop;
+C.BrakingMode = 'Hydraulic';
 
 end
 

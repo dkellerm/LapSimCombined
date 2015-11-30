@@ -21,6 +21,8 @@ classdef Car < handle
         UnsprungMass
         Keq
         Name = '';
+        
+        BrakingMode % 'Hydraulic', 'Regen', 'Combined'
     end
     
     methods
@@ -85,7 +87,7 @@ classdef Car < handle
             
             
             % Calculate power consumption for each motor rpm
-            Power    = (AdjustedMotorT.*MotorRPM./MotorE)*pi/30;
+            Power = (AdjustedMotorT.*MotorRPM./MotorE)*pi/30;
             
             LateralGs = zeros(length(Velocity),1);
             
@@ -99,10 +101,16 @@ classdef Car < handle
             
         function [ LookUpTable ] = StraightDecTableGenerator(CarObject,Velocity,Drag)
             RollingR = CarObject.Weight*CarObject.Tire.RollingResistance; % Rolling Resistance force for car configuration
-
-            % Assume brakes use tire at full potential
-            ForwardGs = -1 * interp1(CarObject.Tire.BrakingAccelerationMap.velocities, CarObject.Tire.BrakingAccelerationMap.accelerations, Velocity, 'spline');
             
+            
+            if strcmp(CarObject.BrakingMode, 'Hydraulic')
+                % Assume brakes use tire at full potential
+                ForwardGs = -1 * interp1(CarObject.Tire.BrakingAccelerationMap.velocities, CarObject.Tire.BrakingAccelerationMap.accelerations, Velocity, 'spline');
+            elseif strcmp(CarObject.BrakingMode, 'Regen')
+                % Assume motor uses tires at full potential
+                ForwardGs = -1 * interp1(CarObject.Tire.RegenAccelerationMap.velocities, CarObject.Tire.RegenAccelerationMap.accelerations, Velocity, 'spline');
+            end
+                
             % Calculate wheel force based on tire capability.
             WheelF = CarObject.Keq*CarObject.Weight*ForwardGs - Drag - RollingR; 
             
@@ -112,6 +120,15 @@ classdef Car < handle
             % Calculate applied brake torque based on wheel force
             BrakeTorque = WheelF*CarObject.Tire.Radius;
             
+            if strcmp(CarObject.BrakingMode, 'Hydraulic')
+                % Assume brakes use tire at full potential
+                PowerConsumed = zeros(length(BrakeTorque),1);
+            elseif strcmp(CarObject.BrakingMode, 'Regen')
+                % Assume motor uses tires at full potential
+                Efficiency = .9 * .95 * .9; % Motor * Driveline * Battery
+                PowerConsumed = (BrakeTorque .* AxleRPM)/Efficiency * pi/30;
+            end
+            
             % Straight brake curve, therefore lateral Gs is always zero
             LateralGs = zeros(length(Velocity),1);
             
@@ -119,7 +136,7 @@ classdef Car < handle
             TractiveLimit = ones(length(ForwardGs),1);
             
                         %    1       2     3        4       5           6          7             8
-            LookUpTable = [Velocity,Drag,AxleRPM,MotorRPM,BrakeTorque,ForwardGs,LateralGs,TractiveLimit];
+            LookUpTable = [Velocity,Drag,AxleRPM,MotorRPM,BrakeTorque,ForwardGs,LateralGs,TractiveLimit, PowerConsumed];
         end
         
         function [ LookUpTable ] = CornerAccTableGenerator( CarObject,R,Velocity,Drag)
@@ -202,7 +219,7 @@ classdef Car < handle
             Drag(I) = [];
             % Find maximum possible backward Gs at a given lateral G from
             % tire model
-            BackGs = CarObject.Tire.GGCurve(LateralGs,'Brake',Velocity);
+            BackGs = CarObject.Tire.GGCurve(LateralGs,'Brake',Velocity, CarObject.BrakingMode);
             
             % Calculate wheel force and brake torque based on backward Gs
             WheelF = BackGs*CarObject.Weight*CarObject.Keq - Drag - RollingR;
@@ -227,7 +244,7 @@ classdef Car < handle
             TractiveLimit = BrakeTorque < sum(CarObject.Brakes.Torque);
               
             %                  1      2     3        4         5        6        7           8
-            LookUpTable = [Velocity,Drag,AxleRPM,MotorRPM,BrakeTorque,BackGs,LateralGs,TractiveLimit];
+            LookUpTable = [Velocity,Drag,AxleRPM,MotorRPM,BrakeTorque,BackGs,LateralGs,TractiveLimit, zeros(length(LateralGs),1)];
             
         end
         

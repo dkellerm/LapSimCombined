@@ -118,6 +118,7 @@ MRPM = Table(:,4);
 Acc = Table(:,6);
 Torque = Table(:,5);
 LatGs = Table(:,7);
+PowerConsumed = Table(:,9);
 
 Vel = Vel.^2;
 Acc = -Acc*32.174*12;
@@ -139,6 +140,9 @@ B4 = Torque(2:end) - M4.*Vel(2:end);
 M5 = (LatGs(2:end) - LatGs(1:end-1))./(Vel(2:end) - Vel(1:end-1));
 B5 = LatGs(2:end) - M5.*Vel(2:end);
 
+M6 = (PowerConsumed(2:end) - PowerConsumed(1:end-1))./(Vel(2:end) - Vel(1:end-1));
+B6 = PowerConsumed(2:end) - M6.*Vel(2:end);
+
 V = StartV^2;
 X = 0;
 A = Acc(end);
@@ -146,10 +150,11 @@ AR = ARPM(end);
 MR = MRPM(end);
 TQ = Torque(end);
 LG = LatGs(end);
+P = PowerConsumed(end);
 
-Result = [X,V,A,AR,MR,TQ,LG];
+Result = [X,V,A,AR,MR,TQ,LG,P];
 
-Results = zeros(6000,7);
+Results = zeros(6000,8);
 TL = zeros(6000,1);
 
 Results(1,:) = Result;
@@ -163,7 +168,7 @@ while V
     
     a = find(Vel >= V, 1, 'first');
     
-    TL(i) = Table(a,end);
+    TL(i) = Table(a,8);
     
     if a ~= 1
         a = a - 1;
@@ -193,14 +198,16 @@ while V
         MR = M3(a)*avgV + B3(a);
         TQ = M4(a)*avgV + B4(a);
         LG = M5(a)*avgV + B5(a);
+        P =  M6(a)*avgV + B6(a);
     else
         AR = M2(end)*avgV + B2(end);
         MR = M3(end)*avgV + B3(end);
         TQ = M4(end)*avgV + B4(end);
         LG = M5(end)*avgV + B5(end);
+        P =  M6(end)*avgV + B6(end);
     end
     
-    Result = [X,V,A,AR,MR,TQ,LG];
+    Result = [X,V,A,AR,MR,TQ,LG,P];
     
     Results(i,:) = Result;
     

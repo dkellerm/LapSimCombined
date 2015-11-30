@@ -11,6 +11,7 @@ classdef CarTire < handle
         MaxBrakingAcceleration
         ForwardAccelerationMap
         BrakingAccelerationMap
+        RegenAccelerationMap
         MaxLateralAcceleration % Max turning acceleration on GG curve
         LateralAccelerationMap % Max Lateral acceleration for at different radii
         RollingResistance % Constant rolling resistance coefficient
@@ -222,15 +223,16 @@ classdef CarTire < handle
         
         function CalculateLongitudinalGMap(T, CarObject)
             Velocities = 0:10:100;
-            [ForwardGs, BrakingGs] = arrayfun(@(velocity)(LongitudinalGCalculator(T, CarObject, velocity)), Velocities);
+            [ForwardGs, BrakingGs, RegenGs] = arrayfun(@(velocity)(LongitudinalGCalculator(T, CarObject, velocity)), Velocities);
             T.ForwardAccelerationMap = struct('accelerations', ForwardGs, 'velocities', Velocities);
             T.BrakingAccelerationMap = struct('accelerations', BrakingGs, 'velocities', Velocities);
+            T.RegenAccelerationMap = struct('accelerations', RegenGs, 'velocities', Velocities);
             
             T.MaxForwardAcceleration = max(T.ForwardAccelerationMap.accelerations);
             T.MaxBrakingAcceleration = max(T.BrakingAccelerationMap.accelerations);
         end
         
-        function [forwardG, brakingG] = LongitudinalGCalculator(T,CarObject, Velocity)
+        function [forwardG, brakingG, regenG] = LongitudinalGCalculator(T,CarObject, Velocity)
             
             Kf = CarObject.Suspension.LinearSpring(1);
             Kr = CarObject.Suspension.LinearSpring(2);
@@ -245,6 +247,7 @@ classdef CarTire < handle
             a = 1 - b;
             FR = [ a b ];
             
+            % Acceleration
             Gs = (0:0.01:2)';
             
             Fz = LongitudinalWeightTransfer( Kf, Kr, Kt, Gs, Ws, Wfus, Wrus, hCG, PC, FR, L );
@@ -277,6 +280,7 @@ classdef CarTire < handle
             
             forwardG = RearGs(I);
             
+            % Braking
             Gs = -(0:0.01:5)';
             
             Fz = LongitudinalWeightTransfer( Kf, Kr, Kt, Gs, Ws, Wfus, Wrus, hCG, PC, FR, L );
@@ -288,7 +292,7 @@ classdef CarTire < handle
                 Gs = Gs(1:I(1)-1);
             end
             
-            [Fx,SR] = T.TireModel(Fz,'Longitudinal');
+            [Fx, ~] = T.TireModel(Fz,'Longitudinal');
 
             FxTotal = Fx(:,1) + Fx(:,2) + Fx(:,3) + Fx(:,4);
             
@@ -317,9 +321,43 @@ classdef CarTire < handle
                 
             end
             
+            
+            % Regen
+            Gs = -(0:0.01:2)';
+            
+            Fz = LongitudinalWeightTransfer( Kf, Kr, Kt, Gs, Ws, Wfus, Wrus, hCG, PC, FR, L );
+            Fz_aero_deltas = CarObject.CalculateAeroEffects(Velocity);
+            
+            Fz(:,1) = Fz(:,1) + Fz_aero_deltas(1);
+            Fz(:,2) = Fz(:,2) + Fz_aero_deltas(2);
+            Fz(:,3) = Fz(:,3) + Fz_aero_deltas(3);
+            Fz(:,4) = Fz(:,4) + Fz_aero_deltas(4);
+
+            [Fx, ~] = T.TireModel(Fz,'Longitudinal');
+
+            FxRear  = Fx(:,3) + Fx(:,4);
+
+            W = Ws + Wrus + Wfus;
+            RearGs = -FxRear/W;
+
+            Difference = RearGs - Gs;
+            I1 = find(Difference >= 0,1,'last');
+            I2 = find(Difference < 0, 1,'first');
+
+            Diff1 = abs(Difference(I1));
+            Diff2 = abs(Difference(I2));
+
+            if Diff1 > Diff2
+                I = I2;
+            else
+                I = I1;
+            end
+            
+            regenG = RearGs(I);
+            
         end
  
-        function LongA = GGCurve(T,LateralA,BrakeThrottle, Velocity)
+        function LongA = GGCurve(T,LateralA,BrakeThrottle, Velocity, BrakingMode)
             % CarTire GGCurve Method
             %
             % This method returns an array of possible longitudinal
@@ -363,7 +401,11 @@ classdef CarTire < handle
                 I = isnan(LongA);
                 LongA(I) = maxForwardA(I);
             elseif strcmp(BrakeThrottle,'Brake')
-                maxBrakeA = interp1(T.BrakingAccelerationMap.velocities, T.BrakingAccelerationMap.accelerations, Velocity, 'spline');
+                if strcmp(BrakingMode, 'Hydraulic')
+                    maxBrakeA = interp1(T.BrakingAccelerationMap.velocities, T.BrakingAccelerationMap.accelerations, Velocity, 'spline');
+                elseif strcmp(BrakingMode, 'Regen')
+                    maxBrakeA = interp1(T.RegenAccelerationMap.velocities, T.RegenAccelerationMap.accelerations, Velocity, 'spline');
+                end
                 LongA = abs(maxBrakeA.*sqrt(1-(LateralA./maxLateralAs).^2));
                 I = isnan(LongA);
                 LongA(I) = -1 * maxBrakeA(I);

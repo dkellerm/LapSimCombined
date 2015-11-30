@@ -196,7 +196,7 @@ classdef Telemetry < handle
                     TL = ones(length(X),1)*Dec(1,5);
                     WR = ones(length(X),1).*Dec(1,6);
                     MR = ones(length(X),1).*Dec(1,7);
-                    P = zeros(length(X),1);
+                    P = ones(length(X),1).*Dec(1,8);
                     MT = zeros(length(X),1);
                     BT = ones(length(X),1).*Dec(1,10);
                     NewT  = ones(length(X),1).*Acc(1,11);
