@@ -218,9 +218,8 @@ classdef Telemetry < handle
                 % point
                 AccStartIndex = find(Acc(:,1) == 0);
                 AccEndIndex = find(Acc(:,1) == BP(i,1));
-                if AccEndIndex
+                if ~AccEndIndex
                     Acc(end+1,:) = Acc(end,:);
-                else
                     Acc(end,1) = Acc(end,1) + dx;
                     AccEndIndex = find(Acc(:,1) == BP(i,1));
                 end

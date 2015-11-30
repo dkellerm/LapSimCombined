@@ -29,8 +29,8 @@ Car = @()(CarBuilderSS('Electric', rowNumber));
 car = Car();
 track = Track();
 
-% [ RawResults,PointResults ] = RPMLimitingAnalysis( Car,Track );
-Simulate( car, track )
+[ RawResults,PointResults ] = RPMLimitingAnalysis( Car,Track );
+%Simulate( car, track )
 % save('BatteryandRPMLimitingAnalysis')
 
 % [Results, RawResults] = ExcelSweep(Track,6,8,'Combustion');
