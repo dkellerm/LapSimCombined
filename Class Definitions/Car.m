@@ -133,7 +133,7 @@ classdef Car < handle
             elseif strcmp(CarObject.BrakingMode, 'Regen')
                 % Assume motor uses tires at full potential
                 Efficiency = .9 * .95 * .9; % Motor * Driveline * Battery
-                MotorPower = (MotorTorque .* MotorRPM)/Efficiency * pi/30;
+                MotorPower = (MotorTorque .* MotorRPM)*Efficiency * pi/30;
             end
             
             % Straight brake curve, therefore lateral Gs is always zero
