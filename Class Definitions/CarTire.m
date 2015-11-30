@@ -148,13 +148,24 @@ classdef CarTire < handle
                 Fz = Fz * -1; % Tire Data is incorrectly defined as Fz down being negative.
                 
                 % Find tire lateral forces at different slip angles.
-                FyFI = interp3(T.TireModelLatNormalAxis, T.TireModelLatSlipAxis, T.TireModelLatCamberAxis, T.TireModelLatData, Fz(:,1), SlipAngleGuesses, 0); % Tire Data isn't fit for negative inclination angles so using zero
-                FyFO = interp3(T.TireModelLatNormalAxis, T.TireModelLatSlipAxis, T.TireModelLatCamberAxis, T.TireModelLatData, Fz(:,2), SlipAngleGuesses, -T.FrontStaticInclinationAngle);
-                FyRI = interp3(T.TireModelLatNormalAxis, T.TireModelLatSlipAxis, T.TireModelLatCamberAxis, T.TireModelLatData, Fz(:,3), SlipAngleGuesses, 0); % Tire Data isn't fit for negative inclination angles so using zero
-                FyRO = interp3(T.TireModelLatNormalAxis, T.TireModelLatSlipAxis, T.TireModelLatCamberAxis, T.TireModelLatData, Fz(:,4), SlipAngleGuesses, -T.RearStaticInclinationAngle);
+                FyOptions = zeros(4, length(SlipAngleGuesses),length(Gs));
+                FyOptions(1,:,:) = interp3(T.TireModelLatNormalAxis, T.TireModelLatSlipAxis, T.TireModelLatCamberAxis, T.TireModelLatData, Fz(:,1), SlipAngleGuesses, 0); % Tire Data isn't fit for negative inclination angles so using zero
+                FyOptions(2,:,:) = interp3(T.TireModelLatNormalAxis, T.TireModelLatSlipAxis, T.TireModelLatCamberAxis, T.TireModelLatData, Fz(:,2), SlipAngleGuesses, -T.FrontStaticInclinationAngle);
+                FyOptions(3,:,:) = interp3(T.TireModelLatNormalAxis, T.TireModelLatSlipAxis, T.TireModelLatCamberAxis, T.TireModelLatData, Fz(:,3), SlipAngleGuesses, 0); % Tire Data isn't fit for negative inclination angles so using zero
+                FyOptions(4,:,:) = interp3(T.TireModelLatNormalAxis, T.TireModelLatSlipAxis, T.TireModelLatCamberAxis, T.TireModelLatData, Fz(:,4), SlipAngleGuesses, -T.RearStaticInclinationAngle);
+                
+                % Multiply Fy by cosine of slip angle.
+                for i = 1:size(FyOptions,1)
+                    for j = 1:size(FyOptions,3)
+                        FyOptions(i,:,j) = FyOptions(i,:,j) .* cosd(SlipAngleGuesses);
+                    end
+                end
                 
                 % Assume ideal slip angle selection
-                Fy = [max(FyFI,[],1); max(FyFO, [], 1); max(FyRI, [], 1); max(FyRO, [], 1)]';
+                Fy = [max(FyOptions(1,:,:),[],1);...
+                    max(FyOptions(2,:,:), [], 1);...
+                    max(FyOptions(3,:,:), [], 1);...
+                    max(FyOptions(4,:,:), [], 1)]';
                 
                 % Remove any NaN wheel forces.
                 NaNI = isnan(Fy);
