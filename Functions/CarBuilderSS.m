@@ -127,16 +127,21 @@ switch tabName
         Capacity = setupSheetData(89); % Gal
         Weight = setupSheetData(90); % lb
 %         fuel_step = setupSheetData(91);
-        fuel_corner = setupSheetData(92);
-        fuel_brake = setupSheetData(93);
-        fuel_shift = setupSheetData(94);
+%         fuel_corner = setupSheetData(92);
+%         fuel_brake = setupSheetData(93);
+%         fuel_shift = setupSheetData(94);
         % fuel_map = xlsread('SetupSheets.xlsx',setup,'CM6');
+        
+        if max(H) < 60
         fuel_map_raw = xlsread('FuelConsumption.xlsx','Sheet1','A:A');
-
+        else
+        fuel_map_raw = xlsread('FuelConsumption.xlsx','Sheet1','B:B');
+        end
+        
         RPMincrement = (0:max(RPMS)/length(fuel_map_raw):length(RPMS)-2)'; %RPM's array with fuel step increment
         E = abs(spline(RPMincrement,fuel_map_raw,RPMS)); %fuel_map
         
-        Battery = CarBattery(Capacity,Weight,CG,fuel_corner,fuel_brake,fuel_shift);
+        Battery = CarBattery(Capacity,Weight,CG);
         
         %Engine Parameters again
 %         P = 14.7; %[Psi] at WOT
@@ -159,12 +164,13 @@ end
 Driveline = CarDriveline(GearRatios,Efficiency,SprungMass,UnsprungMass,CG,J,FinalDriveRatio,Motor.OutputCurve);
 
 % Car Parameters
-
+% TabName = CarTabName(tabName);
 
 C = Car(Brakes,Driveline,Motor,Chassis,Battery,Suspension,Tire,Drag,CrossArea);
 C.LiftCoefficient = Lift;
 C.Rho = rho;
 C.CenterOfPressure = cop;
+C.TabName = tabName;
 
 end
 

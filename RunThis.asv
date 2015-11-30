@@ -20,7 +20,7 @@
 
 % Car = CarBuilder();
 %tabName = input(' Combustion or Electric? ','s');
-rowNumber = 6;
+rowNumber = 7;
 
 Car = @()(CarBuilderSS('Combustion', rowNumber));
 % Track = @FSAEMichigan2015;

@@ -100,7 +100,10 @@ classdef CarDriveline < handle
 %                     OutputCurves(3,:,1), OutputCurves(3,:,2), ...
 %                     OutputCurves(4,:,1), OutputCurves(4,:,2), ...
 %                     OutputCurves(5,:,1), OutputCurves(5,:,2), ...
-%                     D.OutputCurve(:,1), D.OutputCurve(:,2))
+%                     D.OutputCurve(:,1), D.OutputCurve(:,2));
+%                 xlabel('Engine Speed [RPM]');
+%                 ylabel('Tractive Force [lbf]');
+                
             else % Single Gear
                 maxAxleRPM = round(max(MotorOutputCurve(:,1)) / D.GearRatios(1));
                 D.OutputCurve = zeros(maxAxleRPM + 1, 6);

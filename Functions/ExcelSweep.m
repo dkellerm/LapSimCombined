@@ -9,8 +9,8 @@ function [Results, RawResults] = ExcelSweep(TrackFcn, StartRow, EndRow, TabName)
 	EnduranceLength = 866142; % 22km in inches
 	EnduranceLaps = ceil(EnduranceLength/Track.Length);
     
-	parfor i = RowIndices
-        
+    for i = RowIndices
+        EnduranceEnergy = 0; %Initialize
 %         Track = TrackFcn();
 		Car = CarBuilderSS(TabName, i + StartRow - 1);
 		Tele = Simulate(Car, Track);
@@ -31,13 +31,8 @@ function [Results, RawResults] = ExcelSweep(TrackFcn, StartRow, EndRow, TabName)
             case 'Combustion'
                 EnduranceLapTimes = Tele.LapData(1:Track.Length,11);
                 fuelStep = zeros(1,length(Track.Sections)); %initiliaze [L/s]
-                for j = 1:Track.Sections
-                         if Track.Track(1,j).Radius > 0
-                             fuelStep(end+1) = Car.Battery.fuel_corner;
-                         end
-                        if Track.Track(1,j).Radius == 0
-                             fuelStep(end+1) = Car.Motor.OutputCurve(i,3);
-                        end
+                for j = 1:length(Tele.LapData(1:Track.Length,9))
+                    fuelStep(end+1) = Tele.LapData(j,8);
                 end
                  EnduranceEnergy = sum(fuelStep)*sum(EnduranceLapTimes); %fuel Used      
         end

@@ -20,6 +20,7 @@ classdef Car < handle
         SprungMass
         UnsprungMass
         Keq
+        TabName
         Name = '';
     end
     
@@ -67,7 +68,7 @@ classdef Car < handle
             % Calculate Car Velocity for each Axle RPM value
             Velocity = CarObject.Tire.Radius*AxleRPM*pi/30; % in/s
             % Calculate corresponding drag for each veloicty
-            Drag     = (0.5*RHO*CarObject.DragCoefficient*CarObject.FrontCrossSection.*Velocity.^2)/12^4; % lbfe
+            Drag     = (0.5*RHO*CarObject.DragCoefficient*CarObject.FrontCrossSection.*Velocity.^2)/12^4; % lbf
             
             MaxDrivelineA   = (WheelF - Drag - RollingR)/(CarObject.Keq*CarObject.Weight/(12*32.174)); % in/s^2
             MaxDrivelineGs  = MaxDrivelineA/(12*32.174);
@@ -85,7 +86,12 @@ classdef Car < handle
             
             
             % Calculate power consumption for each motor rpm
+            switch CarObject.TabName
+                case 'Electric'
             Power    = (AdjustedMotorT.*MotorRPM./MotorE)*pi/30;
+                case 'Combustion'
+                    Power = (AdjustedMotorT./MotorT).*MotorE;
+            end
             
             LateralGs = zeros(length(Velocity),1);
             
@@ -178,7 +184,13 @@ classdef Car < handle
             
             % calculate power consumption based on motor torque, rpm and
             % efficiency
-            Power = ((MotorT.*MotorRPM./MotorE)*pi/30);
+%             Power = ((MotorT.*MotorRPM./MotorE)*pi/30);
+            switch CarObject.TabName
+                case 'Electric'
+                Power = ((MotorT.*MotorRPM./MotorE)*pi/30);
+                case 'Combustion'
+                    Power = MotorE;
+            end
             %                  1      2     3       4        5      6     7       8         9          10
             LookUpTable = [Velocity,Drag,AxleRPM,MotorRPM,MotorT,MotorE,Power,ForwardGs,LateralGs,TractiveLimit];
             
