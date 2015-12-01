@@ -319,17 +319,17 @@ classdef Telemetry < handle
             V = Tele.LapData(:,2)*(3600/(5280*12));
             X = Tele.LapData(:,1)/12;
 
-%             figure
-%             plot(X,V);
-%             xlabel('Distance (ft)')
-%             ylabel('Speed (mph)')
-%             title('Lap Speeds')
-% 
-%             figure
-%             hist(Tele.LapData(:,7),100);
-%             xlabel('Motor Speed (RPM)')
-%             ylabel('Number of Occurrences')
-%             title('Motor RPM Histogram')
+            figure
+            plot(X,V);
+            xlabel('Distance (ft)')
+            ylabel('Speed (mph)')
+            title('Lap Speeds')
+
+            figure
+            hist(Tele.LapData(:,7),100);
+            xlabel('Motor Speed (RPM)')
+            ylabel('Number of Occurrences')
+            title('Motor RPM Histogram')
 
             for i = 1:S
 
