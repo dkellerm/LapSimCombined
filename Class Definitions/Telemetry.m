@@ -434,7 +434,7 @@ classdef Telemetry < handle
             end
             disp(['AutoCross Score      : ', num2str(AutoXScore)])
             
-            SkidPadT = 2*pi*sqrt(9.1/(9.81*Gs));
+            SkidPadT = 2*pi*sqrt(9.1/(9.81*Car.Tire.MaxLateralAcceleration));
             Tmin = 5.602;
             Tmax = 1.25*Tmin;
             SkidPadScore = 71.5*((Tmax/SkidPadT)^2-1)/((Tmax/Tmin)^2-1) + 3.5;
@@ -478,7 +478,9 @@ classdef Telemetry < handle
             TotalScore = AccScore + AutoXScore + SkidPadScore + EScore + EndScore;
             disp(['Total Score          : ', num2str(TotalScore)])
             
-            Tele.Results = {Time,TopV,TimeV,TotalAccTime,DistV,TopA,TotalEnergy,PercentTL,TotalScore,AccScore,AutoXScore,SkidPadScore,EndScore};
+            Tele.Results = {Time,TopV,TimeV,TotalAccTime,DistV,TopA,TotalEnergy,PercentTL,TotalScore,AccScore,AutoXScore,SkidPadScore,EndScore,EScore};
+            Tele.Miscellaneous{4} = Car.Driveline.CurrentTF;
+            Tele.Miscellaneous{5} = Car.Driveline.CurrentRPMLimit;
             
         end
     end
