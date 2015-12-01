@@ -1,4 +1,4 @@
-function [ RawResults, Results ] = RPMLimitingAnalysis(CarFcn, TrackFcn)
+function [ RawResults, PointsResults ] = RPMLimitingAnalysis(CarFcn, TrackFcn)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -13,15 +13,13 @@ GearRatioLength = length(GearRatios);
 RPMCutOffs = [5000 4800 4300 4000 3800 3500 3000 2000];
 RPMCutOffLength = length(RPMCutOffs);
 
-Results = zeros(9,RegenLength);
 RawResults = cell(RegenLength, GearRatioLength, RPMCutOffLength);
+PointsResults = zeros(RegenLength, GearRatioLength, RPMCutOffLength);
 
 EnduranceLength = 866142; % 22km in inches
 % EnduranceLaps = EnduranceLength/Track.Length;
 
 parfor i = 1:RegenLength
-    BestResult = [];
-    
     for j = 1:GearRatioLength
         Car = CarFcn();
         Track = TrackFcn();
@@ -31,11 +29,6 @@ parfor i = 1:RegenLength
         Car.Driveline.SetGearRatios(GR, Car.Motor.OutputCurve);
         
         Tele = Simulate(Car,Track);
-        
-        TimeAutoX = sum(cell2mat(Tele.Results(1)));
-        Time75 = cell2mat(Tele.Results(4));
-        MaxG = Car.Tire.MaxLateralAcceleration;
-        TimeSkid = 2*pi*sqrt(9.1/(9.81*MaxG));
         
         if RegenOnOff(i) == 0
             Car.BrakingMode = 'Hydraulic';
@@ -47,23 +40,23 @@ parfor i = 1:RegenLength
             RPM = round(RPMCutOffs(k) / GR);
             Car.Driveline.SetRPMLimit(RPM);
             
-            [Energy, EndTime, TF, Tele ] = EnduranceSimulationBasic(Car,Track,EnduranceLength);
+            [~, ~, ~, TeleEndurance ] = EnduranceSimulationBasic(Car,Track,EnduranceLength);
             
-            MotorRPMLimit = RPM * GR;
-            
-            if isempty(BestResult)
-                BestResult = [TimeAutoX,Time75,TimeSkid,EndTime,Energy,TF,MotorRPMLimit,GR, RegenOnOff(i)];
-            else
-                if EndTime < BestResult(1)
-                    BestResult = [TimeAutoX,Time75,TimeSkid,EndTime,Energy,TF,MotorRPMLimit,GR, RegenOnOff(i)];
-                end
-            end
+            % Fill in Endurance Times & Scores
+            Tele.Miscellaneous{4} = TeleEndurance.Miscellaneous{4};  
+            Tele.Miscellaneous{5} = TeleEndurance.Miscellaneous{5};
+            Tele.Results{13} = TeleEndurance.Results{13};
+            Tele.Results{14} = TeleEndurance.Results{14};
+            Tele.Results{9} = TeleEndurance.Results{10} + ...
+                TeleEndurance.Results{11} + ...
+                TeleEndurance.Results{12} + ...
+                TeleEndurance.Results{13} + ...
+                TeleEndurance.Results{14};
             
             RawResults{i,j,k} = Tele;
+            PointsResults(i,j,k) = Tele.Results{9};
         end
     end
-    
-    Results(:,i) = BestResult';
 end
 
 % parfor i = S1+1:S1*2
