@@ -318,7 +318,7 @@ classdef Telemetry < handle
 
             V = Tele.LapData(:,2)*(3600/(5280*12));
             X = Tele.LapData(:,1)/12;
-
+% 
             figure
             plot(X,V);
             xlabel('Distance (ft)')
@@ -326,10 +326,15 @@ classdef Telemetry < handle
             title('Lap Speeds')
 
             figure
-            hist(Tele.LapData(:,7),100);
-            xlabel('Motor Speed (RPM)')
-            ylabel('Number of Occurrences')
-            title('Motor RPM Histogram')
+            hist(V,100);
+            xlabel('Velocity')
+            ylabel('Number of Occurences')
+
+%             figure
+%             hist(Tele.LapData(:,7),100);
+%             xlabel('Motor Speed (RPM)')
+%             ylabel('Number of Occurrences')
+%             title('Motor RPM Histogram')
 
             for i = 1:S
 
@@ -421,7 +426,7 @@ classdef Telemetry < handle
                     case 'Combustion'
                         CO2kg = Car.Battery.Capacity*2.3/EnduranceLaps;
                     case 'Electric'
-                        CO2kg = Car.Battery.Capacity*0.65/EndurancceLaps;
+                        CO2kg = Car.Battery.Capacity*0.65/EnduranceLaps;
                 end
                 
                 EF = (TminEnd/TotalTime)*(CO2min/CO2kg);
